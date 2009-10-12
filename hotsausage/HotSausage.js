@@ -1,0 +1,1 @@
+if (!HotSausage) {var HotSausage = {};}

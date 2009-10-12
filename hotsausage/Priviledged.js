@@ -1,7 +1,5 @@
 "use strict";
 
-if (!HotSausage) {var HotSausage = {};}
-
 HotSausage.Priviledged = (function () {
 	var Priviledged = {};
 	var _Priviledged = Priviledged;

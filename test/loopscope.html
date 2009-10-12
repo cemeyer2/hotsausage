@@ -1,0 +1,59 @@
+<html>
+	<head>
+		
+	</head>
+	<body>
+		<script language="JavaScript">
+			var noVar = function () {
+		var propertyCount = 0;
+		var localPropertyCount = 0;
+	    var array = [1,2,3];
+	    for (each in array) {
+			propertyCount += 1;
+			if (array.hasOwnProperty(each)) {
+				localPropertyCount += 1;
+			};
+		};
+		return [propertyCount, localPropertyCount, each];
+	};
+
+	var localVar = function () {
+		var propertyCount = 0;
+		var localPropertyCount = 0;
+		var array = [1,2,3];
+	    var each = "blah";
+	    for (each in array) {
+			propertyCount += 1;
+			if (array.hasOwnProperty(each)) {
+				localPropertyCount += 1;
+			};
+		};
+		return [propertyCount, localPropertyCount, each];
+	};
+
+	var forVar = function () {
+		var propertyCount = 0;
+		var localPropertyCount = 0;
+		var array = [1,2,3];
+	    for (var each in array) {
+			propertyCount += 1;
+			if (array.hasOwnProperty(each)) {
+				localPropertyCount += 1;
+			};
+		};
+		return [propertyCount, localPropertyCount, each];
+	};
+
+	var results = [];
+	delete each;
+	results[0] = noVar();
+	try {results[1] = each} catch (ex) {results[1] = ex};
+	delete each;
+	results[2] = localVar();
+	try {results[3] = each} catch (ex) {results[3] = ex};
+	delete each;
+	results[4] = forVar();
+	try {results[5] = each} catch (ex) {results[5] = ex};
+		</script>
+	</body>
+</html>

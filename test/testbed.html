@@ -1,0 +1,52 @@
+<html>
+	<head>
+		<title>MDPnP Javascript Testbed</title>
+		
+		<style type="text/css">
+  		.spec {
+    		margin: 5px;
+  		}
+
+  		.passed {
+    		background-color: lightgreen;
+  		}
+
+  		.failed {
+    		background-color: pink;
+  		}
+
+  		.resultMessage {
+    		white-space: pre;
+  		}
+
+  		.stackTrace {
+    		white-space: pre;
+    		font-size: .8em;
+    		margin-left: 10px;
+  		}
+		</style>
+		
+		<script src="jasmine/lib/jasmine.js"></script>
+		<script src="jasmine/lib/TrivialReporter.js"></script>
+		
+		<!--Libraries-->
+		<!--script src="../lib/json_parse.js"></script>
+		
+		<!--Hot Sausage-->
+		<script src="../HotSausage/Tangibility.js"></script>
+		
+		<!--Tests-->
+		<script src="tests/TangibilityTests.js"></script>
+		
+	</head>
+	<body>
+		
+		<script language="JavaScript">
+			//var testsToRun = prompt("Path to js file defining specs?");
+			//jasmine.include(testsToRun);
+			var jasmineEnv = jasmine.getEnv();
+  			jasmineEnv.reporter = new jasmine.TrivialReporter();
+  			jasmineEnv.execute();
+		</script>
+	</body>
+</html>
