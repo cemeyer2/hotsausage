@@ -1,13 +1,21 @@
 "use strict";
 
-HotSausage.Priviledged = (function () {
+HotSausage.module("Priviledged", function (HS) {
+	var	_handleErrorsQuietly = false;
+	var _coreUseEnabled = false;
+	var _isLocked = false;
 	var Priviledged = {};
 	var _Priviledged = Priviledged;
-	var	_handleErrorsQuietly = false;
-	var _nativeUseEnabled = false;
+	// Priviledged and _Priviledged are references to the public and private contents of this
+	// module.  Until the module is locked, both refer to the exact same object.  This allows the 
+	// user of the module to change certain properies of the object, and be accessible to both the 
+	// private and public view of the object.  Once the module is locked, the public one continues 
+	// to reference the original object - with key properties removed; and the private one 
+	// references a new object with the copies of the required properties.
 	
 	var _delegate = function (target) {
 		return target.contructor.prototype;
+		// Below are alternate ways to access the target's prototype (aka delegate).
 		// return Object.getPrototypeOf(target);
 		// return target.__proto__;
 	};
@@ -25,7 +33,7 @@ HotSausage.Priviledged = (function () {
 		var sessionKey = Math.random(),
 			transporter = function (aPurse) {_purse = aPurse;};
 		_ActiveTransporters[sessionKey] = transporter;
-		target._getPurse(sessionKey); /// The purse is set here!
+		target.__pp(sessionKey); /// The purse is set here!
 		delete _ActiveTransporters[sessionKey];
 		return _purse;
 		/// NOTE: 	_ActiveTransporters is not threadsafe, but is 
@@ -57,11 +65,11 @@ HotSausage.Priviledged = (function () {
 	};
 	
 	var _attachPurse = function (target) {
-		if (target._getPurse !== undefined) {
+		if (target.__pp !== undefined) {
 			return _Priviledged.onPurseAlreadyPresent(target);
 		}
 		var	_purse = _newEmptyObject(target);
-		target._getPurse = function (sessionKey) {
+		target.__pp = function getPurse(sessionKey) {
 			var transporter = _ActiveTransporters[sessionKey];
 			if (transporter === undefined) {
 				return _Priviledged.onImproperPurseKey(this, sessionKey);
@@ -71,8 +79,8 @@ HotSausage.Priviledged = (function () {
 		return _purse;
 	};
 	
-	Priviledged.setMethod = _setMethod;
-	Priviledged.attachPurse = _attachPurse;
+	Priviledged.methodOn = _setMethod;
+	Priviledged.enableOn = _attachPurse;
 	
 	Priviledged.onImproperMethod = function (target, behavior, methodName, method) {
 		if (_handleErrorsQuietly) {return target;}
@@ -104,92 +112,45 @@ HotSausage.Priviledged = (function () {
 	
 	Priviledged.handleErrorsQuietly = function () {_handleErrorsQuietly = true;};
 	
-	Priviledged.enableNativeUse = function () {
-		if (_nativeUseEnabled) {return true;} 
-		if (Object.prototype.enablePurse) {return false;}
+	Priviledged.enableUseFromCore = function () {
+		if (_coreUseEnabled) {return true;} 
+		if (Object.prototype.enablePrivacy) {return false;}
 		if (Object.prototype.priviledgedMethod) {return false;}
 		if (Function.prototype.priviledgedMethod) {return false;}
-		Object.prototype.enablePurse = function () {return _attachPurse(this);};
+		Object.prototype.enablePrivacy = function () {return _attachPurse(this);};
 		Object.prototype.priviledgedMethod = function (methodName, func) {
 			_setMethod(this, methodName, func);
 		};
 		Function.prototype.priviledgedMethod = function (methodName, func) {
 			_setMethod(this.prototype, methodName, func);
 		};
-		return (_nativeUseEnabled = true);
+		return (_coreUseEnabled = true);
 	};
 	
 	Priviledged.lock = function () {
-		if (Priviledged.setMethod !== undefined) {
+		if (_isLocked) {return;}
 			_Priviledged = {
-				onImproperMethod: Priviledged.onImproperMethod,
-				onImproperPurse: Priviledged.onImproperPurse,
-				onImproperPurseKey: Priviledged.onImproperPurseKey,
-				onPurseAlreadyPresent: Priviledged.onPurseAlreadyPresent
-			};
-			// Priviledged.attachPurse remains!
-			// Priviledged.lock remains!
-			delete Priviledged.handleErrorsQuietly;
-			delete Priviledged.enableNativeUse;
-			delete Priviledged.setMethod;
-			delete Priviledged.onImproperMethod;
-			delete Priviledged.onImproperPurse;
-			delete Priviledged.onImproperPurseKey;
-			delete Priviledged.onPurseAlreadyPresent;
-			if (_nativeUseEnabled) {
-				// Object.prototype.enablePurse remains!
-				delete Object.prototype.priviledgedMethod;
-				delete Function.prototype.priviledgedMethod;
-			}
+			onImproperMethod: Priviledged.onImproperMethod,
+			onImproperPurse: Priviledged.onImproperPurse,
+			onImproperPurseKey: Priviledged.onImproperPurseKey,
+			onPurseAlreadyPresent: Priviledged.onPurseAlreadyPresent
+		};
+		// Priviledged.attachPurse remains!
+		// Priviledged.lock remains!
+		delete Priviledged.handleErrorsQuietly;
+		delete Priviledged.enableUseFromCore;
+		delete Priviledged.methodOn;
+		delete Priviledged.onImproperMethod;
+		delete Priviledged.onImproperPurse;
+		delete Priviledged.onImproperPurseKey;
+		delete Priviledged.onPurseAlreadyPresent;
+		if (_coreUseEnabled) {
+			// Object.prototype.enablePurse remains!
+			delete Object.prototype.priviledgedMethod;
+			delete Function.prototype.priviledgedMethod;
 		}
 	};
 	
 	return Priviledged;
-})();
+});
 
-
-Priviledged.Examples = {};
-
-Priviledged.Examples.Person = (function () {
-	var Person = function (name) {
-		var purse = Priviledged.attachPurse(this);
-		var pair = KeyGenerator.newPair();
-		purse.name = name;
-		purse.favoritePassword = 'abc123';
-		purse.secretLover = 'Gumby';
-		purse.privateKey = pair.privateKey;
-		purse.publickey = pair.publicKey;
-	};
-	
-	Priviledged.setMethod(Person, "publicKey")
-})();
-
-Priviledged.Examples.Person
-
-Priviledged.setMethod = _setMethod;
-Priviledged.attachPurse = _attachPurse;
-
-	
-	Priviledged.enableNativeUse();
-	Priviledged.handleErrorsQuietly();
-	
-	Thingy = function (name) {
-		var purse = this.enablePurse();
-		purse.secretCode = "ABC123";
-		purse.ssn = "344-55-6677";
-		purse.batPhoneNumber = "312-234-5678";
-	};
-	
-	Thingy.priviledgedMethod("didTheyCall", function (phoneNumber) {
-		return this.batPhoneNumber === phoneNumber;
-	});
-	
-	Priviledged.onImproperPurse = function (target, actualPurseOwner) {
-		if (_handleErrorsQuietly) {return target;}
-		var error = new Error("Another object's purse has been attached to the target object!");
-		error.name = "ImproperPurse";
-		throw error;
-	}
-	Priviledged.lock();
-	
-	
