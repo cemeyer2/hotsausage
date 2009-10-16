@@ -8,14 +8,15 @@ describe('patient test suite 1', function(){
 		steve = new mdpnp.Patient('SteveJobs', 'M', now);
 	}); 
 
-	it('should return a gender', function() { 
-		expect(steve.getSex()).toEqual('M'); 
-	}); 
+	describe('when a new patient is made', function(){ 
+		it('should return a gender', function() { 
+			expect(steve.getSex()).toEqual('M'); 
+		}); 
 
-	it('shoule return a patient name', function() { 
-		expect(steve.getName()).toEqual('SteveJobs'); 
-	}); 
-
+		it('shoule return a patient name', function() { 
+			expect(steve.getName()).toEqual('SteveJobs'); 
+		})
+	});
 });
 
 describe("patient test suite 2", function(){

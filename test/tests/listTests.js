@@ -1,4 +1,4 @@
-describe('List', function () { 
+describe('List test suite', function () { 
 	var emptyList, namesArray, shortList, size; 
 	
 	beforeEach(function () { 
@@ -17,7 +17,7 @@ describe('List', function () {
 	});
 
 	describe('when creating a list from an array', function () { 
-		it('should include all of the elements inorder', function () { 
+		it('should include all of the elements in-order', function () { 
 			expect(namesList.isEmpty()).toBe(false); 
 			expect(namesList.notEmpty()).toBe(true); 
 			expect(namesList.size()).toBe(arraySize);
