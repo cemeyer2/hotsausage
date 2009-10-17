@@ -58,6 +58,8 @@
 			submodule.withAllSubmodulesDo(action);
 		});
 	};
+
+	_Module.prototype.hasOwnProperty = Object.prototype.hasOwnProperty;
 		
 	_newModule(this, null, "HotSausage", function (HS, _HS) {
 		var _setMethod = function (behavior, methodName, implementationFunc) {
@@ -75,8 +77,8 @@
 		_HS.handlesErrorsQuietly = false;
 		_HS.coreMethodsEnabled = false;
 
-		_HS._newObject = _newObject;		
-		_HS._delegate = function (target) {
+		_HS.newObject = _newObject;		
+		_HS.delegateOf = function (target) {
 			return target.__proto__;
 			// Alternate ways to access the target's prototype (aka delegate):
 			// 		return target.constructor.prototype;
@@ -107,7 +109,7 @@
 		};
 		
 		HS.lock = function () {
-			if(_HS.isLocked) {return;};
+			if(_HS.isLocked) {return;}
 			delete HS.methodOn;
 			delete HS.handleErrorsQuietly;
 			delete HS.enableCoreMethods;

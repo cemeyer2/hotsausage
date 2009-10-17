@@ -1,3 +1,10 @@
+// Comments on Douglas Crockford's "JavaScript: The Good Parts"
+
+// Maurice Rabb
+// m3rabb@illinois.edu
+// 312-735-0580
+
+
 // JS:TGP p39
 // BAD EXAMPLE
 var add_the_handlers = function (nodes) {
@@ -5,7 +12,7 @@ var add_the_handlers = function (nodes) {
 	for (i = 0; i < nodes.length; i += 1) {
 		nodes[i].onclick = function (e) {
 			alert(i);
-		}
+		};
 	}
 };
 
@@ -23,14 +30,16 @@ var add_the_handlers = function (nodes) {
 
 // EVEN BETTER EXAMPLE
 var add_the_handlers = function (nodes) {
-	var newBoundFunc = function (value) {
-			return function (e) {
-				alert(value);
-			};
-		},
-		index;
-	for (index = 0; index < nodes.length; index += 1) {
-		nodes[index] = newBoundFunc(index);
+	var newHandlerWithBoundValue, index, last;
+	
+	newHandlerWithBoundValue = function (value) {
+		return function (e) {
+			alert(value);
+		};
+	};
+	
+	for (index = 0, last = nodes.length; index < last; index += 1) {
+		nodes[index] = newHandlerWithBoundValue(index);
 	}
 };
 
@@ -67,23 +76,40 @@ seqer.set_seq = 1000;
 var unique = seqer.gensym();	// unique is "Q1000"
 
 
+
 // BETTER VERSION
-var serial_maker = function (prefix, seedNumber) {
-	var sequenceNumber = seedNumber;
+var serial_maker = function (prefixString, seedNumber) {
+	var index = seedNumber;
 	return function () {
-		var result = prefix + sequenceNumber;
-		sequenceNumber += 1;
+		var result = prefixString + index;
+		index += 1;
 		return result;
 	};
-}();
+};
 
 var nextSerial = serial_maker('Q', 1000);
 var unique1 = nextSerial();	// unique is "Q1000"
 var unique2 = nextSerial();	// unique is "Q1001"
 
 
+
 // JS:TGP p47
-// In the first code example, the following line is missing an ending ";".
+// In the first code example, the following line is missing an ";".
 
-	var that = Object.beget(this.prototype)
 
+	var that = Object.beget(this.prototype) // ';' <== missing here!
+
+
+
+
+// JSLint Request
+// In addition to the "standard" immediate function invocation pattern:
+
+
+(function () {}());
+
+
+// It would be great if JSLint accepted the following pattern as well:
+
+
+(function () {})();
