@@ -43,8 +43,8 @@ HotSausage.newSubmodule("Cloning", function (Cloning, _HS_Cloning) {
 	}
 
 	var _setMethod = function (targetInstance, methodName, impFunc) {
-		var localMethodCount = _behaviorOf(targetInstance);
-		var currentMethodCount;
+		var targetBehavior = _sharedBehaviorOf(targetInstance);
+		var localMethodCount;
 		
 		if (_hasOnlyOneInstance(targetBehavior)) {
 			if (impFunc) {
