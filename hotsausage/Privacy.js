@@ -65,6 +65,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HS_Privacy) {
 		return _purse;
 	};
 
+	// Most probably never going to use this since _pp pattern is adequate and simpler.
 	// casualProtectedProperties
 	var _simpleProtectedProperties = function (target) {
 		var	protectedProperties = _newEmptyObject(target);
