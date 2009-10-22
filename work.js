@@ -46,11 +46,11 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 	};
 	
 	
-	var _newInstance_whenHasLocalMethodsButNoCopiesYet = function () {
+	var _blankCopy_whenHasLocalMethodsButNoCopiesYet = function () {
 		var snapshot = _newBehaviorSnapshotFrom(this);
-		var delegated_newInstance = snapshot.__newInstance;
-		this.__newInstance = delegated_newInstance;
-		return delegated_newInstance();
+		var delegated_blankCopy = snapshot.blankCopy;
+		this.blankCopy = delegated_blankCopy;
+		return delegated_blankCopy();
 	};
 	
 	var _setMethod = function (target, methodName, impFunc) {
@@ -61,14 +61,13 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 			localMethodCount = _deleteMethod(target, methodName);
 			if (localMethodCount <= 0) {_deleteMethodDictionary(target);}
 		} else {
-			if (target.__newInstance !== 
-					_newInstance_whenHasLocalMethodsButNoCopiesYet) {
+			if (target.blankCopy !== _blankCopy_whenHasLocalMethodsButNoCopiesYet) {
 				// _deferredBlankInstance
 				// target is either adding its first local method, or has already 
 				// snapshotted a behavior, and since is adding a new local method.
 				target.__snapshotId = _nextSnapshotId(sharedBehavior);
 				_ensureMethodDictionary(target);
-				target.__newInstance = _newInstance_whenHasLocalMethodsButNoCopiesYet;
+				target.blankCopy = _blankCopy_whenHasLocalMethodsButNoCopiesYet;
 			}
 			_putMethod(target, methodName, impFunc);
 		}
@@ -80,7 +79,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 	};
 	
 	var _hasLocalMethodsButNoCopies = function (target) {
-		return target.blankCopy === _newInstance_whenHasLocalMethodsButNoCopiesYet;
+		return target.blankCopy === _blankCopy_whenHasLocalMethodsButNoCopiesYet;
 		// _deferredBlankCopy;
 	};
 	
@@ -93,10 +92,10 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 	};
 	
 	
-	var _onNameForTypeAlreadyAssigned = function (templateName, target) {
+	var _onNameForTypeAlreadyAssigned = function (module, name, factoryMethod) {
 		_HS_Templates.handleError(
 			"CannotCreateTemplateName",
-			"Property " + templateName + "already defined in " + target.toString()
+			"Property " + name + "already defined in " + module.toString()
 		);
 	};
 	
@@ -108,10 +107,10 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 		return name + target.__instanceId;
 	}
 	
-	var _attachMethod_newInstance = function (_target) {
+	var _attach_blankCopy_method = function (_target) {
 		var constructor = function () {};
 		constructor.prototype = _target; 
-		_target.__newInstance = function () {
+		_target.blankCopy = function () {
 			var instance = new constructor();
 			instance.__instanceId = (instance.__nextInstanceId += 1); // check this!	
 			return instance;
@@ -123,7 +122,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 		var behaviorSnapshot = _newObject(sourceTemplate);
 		var snapshotId = sourceInstance.__snapshotId;
 		behaviorSnapshot.__snapshotId = snapshotId;
-		_attachMethod_newInstance(behaviorSnapshot);
+		_attach_blankCopy_method(behaviorSnapshot);
 		_loadMethods(behaviorSnapshot, sourceInstance, sourceTemplate);
 		return behaviorSnapshot;
 	};
@@ -148,22 +147,24 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 	
 	
 	
-	var _onUnexpectedConstructorArguments = function (constructor) {
+	var _onUnexpectedConstructorArguments = function (constructor, newInstance) {
 		_HS_Templates.handleError(
 			"UnexpectedConstructorArguments",
 			"Not expecting any arguments!"
 		);
+		return newInstance;
 	};
 
 	_newSafeDualUseConstructor = function (template, templatePrototype) {
 		var constructor = function ConstructedType(/* arguments */) {
+			var newInstance;
 			if (this instanceof ConstructedType) {
-				newInstance = template.__newInstance();
+				newInstance = template.__blankCopy();
 				newInstance.initFromArgs(arguments);
 				return newInstance;
 			}
 			if (arguments.length > 0) {
-				return _onUnexpectedConstructorArguments(constructor);
+				return _onUnexpectedConstructorArguments(constructor, template);
 			}
 			return template;
 		};
@@ -173,17 +174,17 @@ HotSausage.newSubmodule("Templates", function (Templates, _HS_Templates) {
 
 	var _newTemplate = function (sourceInstance, name, targetModule_) {
 		var sourceTemplate = sourceInstance.__template;
-		var templatePrototype = _newObject(sourceTemplate);
-		var template = _newObject(templatePrototype);
-		var factoryMethod = _newSafeDualUseConstructor(template, templatePrototype);
-		template.__template = template;
-		template.__name = name;
-		template.__snapshotCount = 0;
-		template.__instanceCount = 0;
-		_attachMethod_newInstance(template);
-		_loadMethods(template, sourceInstance, sourceTemplate);
+		var newTemplatePrototype = _newObject(sourceTemplate);
+		var newTemplate = _newObject(newTemplatePrototype);
+		var factoryMethod = _newSafeDualUseConstructor(newTemplate, newTemplatePrototype);
+		newTemplate.__template = newTemplate;
+		newTemplate.__name = name;
+		newTemplate.__snapshotCount = 0;
+		newTemplate.__instanceCount = 0;
+		_attach_blankCopy_method(newTemplate);
+		_loadMethods(newTemplate, sourceInstance, sourceTemplate);
 		_attachFactoryMethod(factoryMethod, targetModule_);
-		return template;
+		return newTemplate;
 	};
 	
 	var _attachFactoryMethod = function (name, factoryMethod, targetModule_) {
