@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="MDPnP" default="doc">
+	
+	<taskdef name="jsdoctoolkit" classname="uk.co.darrenhurley.ant.tasks.JsDocToolkit" classpath="lib/jsdoctoolkit-ant-task-1.0.jar;jsdoc_toolkit/jsrun.jar;jsdoc_toolkit/java/classes/js.jar"/>
+	
+	
+	<target name="doc">
+		<delete dir="out" />
+		<mkdir dir="out"/>
+		<jsdoctoolkit 
+			jsdochome="jsdoc_toolkit/" 
+			template="jsdoc" 
+			outputdir="out/"
+			verbose="true"
+		>
+			<fileset dir="${basedir}/../MDPnP.javascript/" casesensitive="yes">
+			  	<include name="**/*.js"/>
+			  	<exclude name="test/**/*"/>
+			  	<exclude name="lib/**/*"/>
+			</fileset>
+		</jsdoctoolkit>
+	</target>
+	
+	<target name="doc.lib">
+		<delete dir="out.lib" />
+		<mkdir dir="out.lib"/>
+		<jsdoctoolkit 
+			jsdochome="jsdoc_toolkit/" 
+			template="jsdoc" 
+			outputdir="out.lib/" 
+			verbose="true"
+		>
+			<fileset dir="${basedir}/../MDPnP.javascript/lib" casesensitive="yes">
+		  		<include name="**/*.js"/>
+			</fileset>
+		</jsdoctoolkit>
+	</target>
+	
+	<target name="doc.test">
+		<delete dir="out.test" />
+		<mkdir dir="out.test"/>
+		<jsdoctoolkit 
+			jsdochome="jsdoc_toolkit/" 
+			template="jsdoc" 
+			outputdir="out.test/" 
+			verbose="true"
+		>
+			<fileset dir="${basedir}/../MDPnP.javascript/test" casesensitive="yes">
+		  		<include name="**/*.js"/>
+			</fileset>
+		</jsdoctoolkit>
+	</target>
+</project>
