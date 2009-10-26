@@ -52,7 +52,7 @@
 	 */
 	var _onFailureToMakeSubmodule = function (module, name) {
 		if (_HotSausage.handlesErrorsQuietly) {return;}
-		var error = new Error("Property '" name + "' already defined in module!");
+		var error = new Error("Property '" + name + "' already defined in module!");
 		error.name = "CannotCreateSubmodule";
 		throw error;
 	};
