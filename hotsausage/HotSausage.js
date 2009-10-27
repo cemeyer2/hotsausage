@@ -116,7 +116,7 @@
 		 * @param {Function} action a function that takes a single parameter, a submodule object,
 		 * and executes some action on that submodule
 		 */
-		this.submodulesDo = function () {_submodules.forEach(action);}
+		this.submodulesDo = function (action) {_submodules.forEach(action);}
 		/**
 		 * adds a new submodule to this module. this module is set as the parent
 		 * of the new submodule and this module's purse's prototype is set as
@@ -212,9 +212,9 @@
 		
 		//returns the targets prototype
 		_HS.delegateOf = function (target) {
-			return target.constructor.prototype;
+			//return target.constructor.prototype;
 			// Alternate ways to access the target's prototype (aka delegate):
-			//		return target.__proto__;
+					return target.__proto__;
 			// 		return target.constructor.prototype;
 			// 		return Object.getPrototypeOf(target);
 		};

@@ -4,7 +4,7 @@ task :default do
   # files that are super classes of others should come first
   sources  = ["../hotsausage/HotSausage.js"]
  
-  sources += Dir.glob("../hotsausage/**/*.js").reject{|f| sources.include? f}.reject{|f| f.include? "HotSausage_full"}
+  #sources += Dir.glob("../hotsausage/**/*.js").reject{|f| sources.include? f}.reject{|f| f.include? "HotSausage_full"}
  
   hotsausage = File.new('HotSausage_full.js', 'w')
   sources.each do |source_filename|
