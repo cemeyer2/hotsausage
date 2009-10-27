@@ -169,11 +169,17 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	Privacy.privilegedMethodOn = _setPrivilegedMethod;
 	
 	/**
-	 * causes an error to be thrown when a method is improperly moved
+	 * causes an error to be thrown when a method is improperly moved if errors are not handled quietly.
+	 * if errrors are handled quietly, the target is returned
 	 * @function
 	 * @name onImproperMethod
 	 * @memberOf HotSausage.Privacy
-	 * 
+	 * @throws error if errors are not set to be handled quietly in the HotSausage module
+	 * @param {Object} target the target of the action
+	 * @param {Object} behavior the behavior the method is attached to
+	 * @param {String} methodName the name of the method
+	 * @param {Function} method the implementation of the method
+	 * @returns {Object} the target, if errors are set to be handled quietly
 	 */
 	Privacy.onImproperMethod = function (target, behavior, methodName, method) {
 		if (_HierarchicalPurse.handlesErrorsQuietly) {return target;}
@@ -182,6 +188,18 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		throw error;
 	};
 	
+	/**
+	 * causes an error to be thrown when another object's purse has already been attached to the target
+	 * object if errors are not handled quietly. If errors are set to be handled quietly, then
+	 * the target is returned
+	 * @function
+	 * @name onImproperPurse
+	 * @memberOf HotSausage.Privacy
+	 * @throws error if errors are not set to be handled quietly in the HotSausage module
+	 * @param {Object} target the target object
+	 * @param {Object} actualPurseOwner the actual owner of the purse
+	 * @returns {Object} the target, if errors are set to be handled quietly
+	 */
 	Privacy.onImproperPurse = function (target, actualPurseOwner) {
 		if (_HierarchicalPurse.handlesErrorsQuietly) {return target;}
 		var error = new Error("Another object's purse has been attached to the target object!");
@@ -189,6 +207,17 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		throw error;
 	};
 	
+	/**
+	 * causes an error to be thrown when an object purse is attempted to be accessed with an invalid key if errors are not handled quietly.
+	 * if errors are set to be handled quietly, a new empty object is returned
+	 * @function
+	 * @name onImproperPurseKey
+	 * @memberOf HotSausage.Privacy
+	 * @throws error if errors are not set to be handled quietly in the HotSausage module
+	 * @param {Object} target the object we were trying to get the purse of
+	 * @param {Number} invalidKey the invalid session key that was used
+	 * @param {Object} an empty object, if errors are set to be handled quietly
+	 */
 	Privacy.onImproperPurseKey = function (target, invalidKey) {
 		if (_HierarchicalPurse.handlesErrorsQuietly) {return _newObject();}
 		var error = new Error("Attempt to access the target's purse using the wrong session key!");
@@ -196,6 +225,17 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		throw error;
 	};
 	
+	/**
+	 * causes an error to be thrown when a purse is attempted to be attached to an object that already
+	 * has a purse if errors are not handled quietly. If errors are set to be handled quietly, then null
+	 * is returned
+	 * @function
+	 * @name onPurseAlreadyPresent
+	 * @memberOf HotSausage.Privacy
+	 * @throws error if errors are not set to be handled quietly in the HotSausage module
+	 * @param {Object} target the object that already has a purse
+	 * @returns {null} null if errors are set to be handled quietly
+	 */
 	Privacy.onPurseAlreadyPresent = function (target) {
 		if (_HierarchicalPurse.handlesErrorsQuietly) {return null;}
 		var error = new Error("Target already has a purse!");
@@ -203,6 +243,11 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		throw error;
 	};
 	
+	/**
+	 * @deprecated
+	 * @name useSimpleEncapsulation
+	 * @memberOf HotSausage.Privacy
+	 */
 	Privacy.useSimpleEncapsulation = function () {
 		if (_usingSimpleEncapsulation) {return;} 
 		_newPrivilegedMethod = _simplePrivilegedMethod;
@@ -233,6 +278,14 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		return true;
 	};
 		
+	/**
+	 * locks down this module by removing several methods: HotSausage.Privacy.privilegedMethodOn, HotSausage.Privacy.onImproperMethod,
+	 * HotSausage.Privacy.onImproperPurse, HotSausage.Privacy.onImproperPurseKey, HotSausage.Privacy.onPurseAlreadyPresent,
+	 * Object.prototype.privilegedMethod, Function.prototype.privilegedMethod
+	 * @function
+	 * @name lock
+	 * @memberOf HotSausage.Privacy
+	 */
 	Privacy.lock = function () {
 		if (_HierarchicalPurse.isLocked) {return;}
 		if (_usingSimpleEncapsulation) {return _onAttemptToLockWhileInSimpleMode();}
