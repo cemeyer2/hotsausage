@@ -19,9 +19,9 @@
 		
 	var _isDefined = function (target) {return typeof target !== 'undefined';};
 	
-	var _onFailureToMakeSubmodule = function (module, name) {
+	var _onSubmoduleNameAssigned = function (module, name) {
 		if (_HotSausage.handlesErrorsQuietly) {return;}
-		var error = new Error("Property '" name + "' already defined in module!");
+		var error = new Error("Property " + name + " already defined in module!");
 		error.name = "CannotCreateSubmodule";
 		throw error;
 	};
@@ -30,22 +30,22 @@
 	
 	_newModule = function (parent, parentPurse, name, setupAction_) {
 		var module, purse;
-		if (_isDefined(parent[name])) {return _onFailureToAddSubmodule(parent, name);}
+		if (_isDefined(parent[name])) {return _onSubmoduleNameAssigned(parent, name);}
 		purse = _newObject(parentPurse);
 		module = new _Module(name, purse);
 		setupAction_ && setupAction_(module, purse);
 		return (parent[name] = module);
 	};
 	
-	_Module = function (name, purse) {
-		var submodule = [];
-		this.name = function () {return name;};
-		this.currentSubmodules = function () {submodules.slice();}
-		this.submodulesDo = function () {submodules.forEach(action);}
+	_Module = function (_name, _purse) {
+		var _submodules = [];
+		this.name = function () {return _name;};
+		this.currentSubmodules = function () {_submodules.slice();};
+		this.submodulesDo = function (action) {_submodules.forEach(action);};
 		this.newSubmodule = function (submoduleName, setupAction_) {
-			submodules.push(_newModule(this, purse, submoduleName, setupAction_));
+			_submodules.push(_newModule(this, _purse, submoduleName, setupAction_));
 		};
-		purse.module = this;
+		_purse.module = this;
 	};	
 
 	_Module.prototype.withAllSubmodulesDo = function (action) {
@@ -53,9 +53,9 @@
 		this.allSubmodulesDo(action);
 	};
 
-	_Module.prototype.allSubmodulesDo = function (action) {
+	_Module.prototype.allSubmodulesDo = function (_action) {
 		this.submodulesDo(function (submodule) {
-			submodule.withAllSubmodulesDo(action);
+			submodule.withAllSubmodulesDo(_action);
 		});
 	};
 
@@ -63,8 +63,11 @@
 		
 	_newModule(this, null, "HotSausage", function (HS, _HS) {
 		var _setMethod = function (behavior, methodName, implementationFunc) {
-			(implementationFunc) ? 
-				behavior[methodName] = implementationFunc : delete behavior[methodName];
+			if (implementationFunc) { 
+				behavior[methodName] = implementationFunc;
+			} else {
+				delete behavior[methodName];
+			}
 		};
 		
 		var _allSubmodulesOfPerform = function (_methodName) {
@@ -79,8 +82,9 @@
 
 		_HS.newObject = _newObject;		
 		_HS.delegateOf = function (target) {
-			return target.__proto__;
+			return target.constructor.prototype;
 			// Alternate ways to access the target's prototype (aka delegate):
+			// 		return target.__proto__;
 			// 		return target.constructor.prototype;
 			// 		return Object.getPrototypeOf(target);
 		};
@@ -89,6 +93,8 @@
 		HS.isDefined = _isDefined;
 		HS.isUndefined = function (target) {return typeof target === 'undefined';};
 		HS.isString = function (target) {return typeof target === 'string';};
+		HS.isPrivateProperty = function (propertyName) {return propertyName.charAt(0) === '_';};
+		HS.notPrivateProperty = function (propertyName) {return propertyName.charAt(0) !== '_';};
 		
 		HS.handleErrorsQuietly = function () {_HS.handlesErrorsQuietly = true;};		
 		
