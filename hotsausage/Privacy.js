@@ -1,8 +1,10 @@
+// Charlie, anything you want me to check explicitly label with "M3?"
+
 "use strict";
 
 HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	var _delegateOf = _HierarchicalPurse.delegateOf;
-	var _newObject = _HierarchicalPurse._newObject;
+	var _newObject = _HierarchicalPurse.newObject;
 	var _usingSimpleEncapsulation = false;
 	var _SabotageHandlers = Privacy;
 	var _ActiveTransporters = _newObject();
@@ -15,7 +17,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		target._pp(sessionKey); /// The purse is set here!
 		delete _ActiveTransporters[sessionKey];
 		return _purse;
-		/// NOTE: 	_ActiveTransporters is not threadsafe, but is 
+		/// NOTE:   _ActiveTransporters is not threadsafe, but is 
 		///			straight forward to be made so when necessary.
 	};
 		

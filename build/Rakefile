@@ -1,0 +1,16 @@
+desc 'Builds HotSausage full file from source'
+task :default do
+ 
+  # files that are super classes of others should come first
+  sources  = ["../hotsausage/HotSausage.js"]
+ 
+  sources += Dir.glob("../hotsausage/**/*.js").reject{|f| sources.include? f}.reject{|f| f.include? "HotSausage_full"}
+ 
+  hotsausage = File.new('HotSausage_full.js', 'w')
+  sources.each do |source_filename|
+    puts "adding "+source_filename+" to dist file"
+    hotsausage.puts(File.read(source_filename))
+  end
+  
+  %x{java -jar yuicompressor-2.4.2.jar HotSausage_full.js -v -o HotSausage_full-min.js}
+end
