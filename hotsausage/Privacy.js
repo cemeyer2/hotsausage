@@ -1,14 +1,34 @@
-// Charlie, anything you want me to check explicitly label with "M3?"
-
 "use strict";
+/**
+ * HotSausage Privacy Module
+ * @author Marice Rabb
+ * @author Charlie Meyer
+ * @fileOverview defines the Privacy module of HotSausage
+ */
+/**
+ * @namespace HotSausage.Privacy
+ * @name HotSausage.Privacy
+ * @augments _Module
+ * @requires HotSausage
+ */
 
 HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
+	//returns the targets prototype
 	var _delegateOf = _HierarchicalPurse.delegateOf;
+	//gets an (possibly) empty object depending on the parameter
 	var _newObject = _HierarchicalPurse.newObject;
 	var _usingSimpleEncapsulation = false;
 	var _SabotageHandlers = Privacy;
 	var _ActiveTransporters = _newObject();
 	
+	/**
+	 * The only way to get at the purse of a target
+	 * @function
+	 * @inner
+	 * @name _getPurseOf
+	 * @param {Object} target the target we wish to get the purse of
+	 * @returns {Object} the purse of the target
+	 */
 	var _getPurseOf = function (target) {
 		var _purse;
 		var sessionKey = Math.random(),
@@ -21,14 +41,25 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		///			straight forward to be made so when necessary.
 	};
 		
-	var _newPriviledgedMethod = function (_behavior, _methodName, _impFunc) {
-		return function priviledgedMethod(/* arguments */) {
+	/**
+	 * returns a new privileged method. in the implementation function, this
+	 * will refer to the purse of the behavior the function is being added to,
+	 * not the behavior itself
+	 * @function
+	 * @name _newPrivilegedMethod
+	 * @inner
+	 * @param {Object} _behavior the object that this new method will be added to
+	 * @param {String} _methodName the name of the new privileged method
+	 * @param {Function} _impFunc the implementation of the new privileged method
+	 */
+	var _newPrivilegedMethod = function (_behavior, _methodName, _impFunc) {
+		return function privilegedMethod(/* arguments */) {
 			var purse, purseOwner, answer,
 			receiver = this;
 			
-			if (_behavior[_methodName] !== priviledgedMethod) {
+			if (_behavior[_methodName] !== privilegedMethod) {
 				return _SabotageHandlers.onImproperMethod(
-					this, _behavior, _methodName, priviledgedMethod
+					this, _behavior, _methodName, privilegedMethod
 				);
 			}
 			purse = _getPurseOf(receiver);
@@ -41,19 +72,39 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		};
 	};
 
-	var _setPriviledgedMethod = function (behavior, methodName, func) {
+	/**
+	 * adds or removes a privileged method from an object
+	 * @function
+	 * @inner
+	 * @name _setPrivilegedMethod
+	 * @param {Object} behavior the object to add or remove a privileged method on
+	 * @param {String} methodName the name of the function to add
+	 * @param {Function} func the implementation of the new privileged method
+	 */
+	var _setPrivilegedMethod = function (behavior, methodName, func) {
 		if (!func) {return delete behavior[methodName];}
-		behavior[methodName] = _newPriviledgedMethod(behavior, methodName, func);
+		behavior[methodName] = _newPrivilegedMethod(behavior, methodName, func);
 	};
 	
-	var _simplePriviledgedMethod = function (_behavior, _methodName, _impFunc) {
-		return function priviledgedMethod(/* arguments */) {
+	/**
+	 * @deprecated
+	 */
+	var _simplePrivilegedMethod = function (_behavior, _methodName, _impFunc) {
+		return function privilegedMethod(/* arguments */) {
 			var protectedProperties = this._pp();
 			var answer = _impFunc.apply(protectedProperties, arguments);
 			return (answer === protectedProperties) ? this : answer;
 		};
 	};
 	
+	/**
+	 * attaches a purse to a target
+	 * @function
+	 * @inner
+	 * @name _attachProtectedProperties
+	 * @param {Object} target the object to attach a purse to
+	 * @return {Object} the purse for the target
+	 */
 	var _attachProtectedProperties = function (target) {
 		if (target._pp !== undefined) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
@@ -71,6 +122,9 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 
 	// Most probably never going to use this since _pp pattern is adequate and simpler.
 	// casualProtectedProperties
+	/**
+	 * @deprecated
+	 */
 	var _simpleProtectedProperties = function (target) {
 		var	_protectedProperties = _newObject(target);
 		target._pp = function getPP() {
@@ -79,6 +133,13 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		return _protectedProperties;
 	};
 	
+	/**
+	 * @function
+	 * @name _onAttemptToLockWhileInSimpleMode
+	 * @inner
+	 * @throws error when trying to lock while in simple mode
+	 * @deprecated
+	 */
 	var _onAttemptToLockWhileInSimpleMode = function () {
 		if (_HierarchicalPurse.handlesErrorsQuietly) {return;}
 		var error = new Error("Cannot lock which using simple encapsulation!");
@@ -86,9 +147,34 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		throw error;
 	};
 	
+	/**
+	 * attaches a purse to a target
+	 * @function
+	 * @name enableOn
+	 * @memberOf HotSausage.Privacy
+	 * @param {Object} target the object to attach a purse to
+	 * @return {Object} the purse for the target
+	 */
 	Privacy.enableOn = _attachProtectedProperties;
-	Privacy.priviledgedMethodOn = _setPriviledgedMethod;
 	
+	/**
+	 * adds or removes a privileged method from an object
+	 * @function
+	 * @name privilegedMethodOn
+	 * @memberOf HotSausage.Privacy
+	 * @param {Object} behavior the object to add or remove a privileged method on
+	 * @param {String} methodName the name of the function to add
+	 * @param {Function} func the implementation of the new privileged method
+	 */
+	Privacy.privilegedMethodOn = _setPrivilegedMethod;
+	
+	/**
+	 * causes an error to be thrown when a method is improperly moved
+	 * @function
+	 * @name onImproperMethod
+	 * @memberOf HotSausage.Privacy
+	 * 
+	 */
 	Privacy.onImproperMethod = function (target, behavior, methodName, method) {
 		if (_HierarchicalPurse.handlesErrorsQuietly) {return target;}
 		var error = new Error("Method has been moved where it doesn't belong!");
@@ -119,22 +205,30 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	
 	Privacy.useSimpleEncapsulation = function () {
 		if (_usingSimpleEncapsulation) {return;} 
-		_newPriviledgedMethod = _simplePriviledgedMethod;
+		_newPrivilegedMethod = _simplePrivilegedMethod;
 		_attachProtectedProperties = _simpleProtectedProperties;
 		Privacy.enableOn = _simpleProtectedProperties;
 	};
 	
+	/**
+	 * installs core methods for HotSausage.Privacy, namely Object.enablePrivacy, Object.privilegedMethod, and
+	 * Function.privilegedMethod
+	 * @function
+	 * @name installCoreMethods
+	 * @memberOf HotSausage.Privacy
+	 * @return {Boolean} true if methods were successfully installed, false otherwise
+	 */
 	Privacy.installCoreMethods = function () {
 		if (_HierarchicalPurse.coreMethodsEnabled) {return true;} 
 		if (Object.prototype.enablePrivacy) {return false;}
-		if (Object.prototype.priviledgedMethod) {return false;}
-		if (Function.prototype.priviledgedMethod) {return false;}
+		if (Object.prototype.privilegedMethod) {return false;}
+		if (Function.prototype.privilegedMethod) {return false;}
 		Object.prototype.enablePrivacy = function () {return _attachProtectedProperties(this);};
-		Object.prototype.priviledgedMethod = function (methodName, func) {
-			_setPriviledgedMethod(this, methodName, func);
+		Object.prototype.privilegedMethod = function (methodName, func) {
+			_setPrivilegedMethod(this, methodName, func);
 		};
-		Function.prototype.priviledgedMethod = function (methodName, func) {
-			_setPriviledgedMethod(this.prototype, methodName, func);
+		Function.prototype.privilegedMethod = function (methodName, func) {
+			_setPrivilegedMethod(this.prototype, methodName, func);
 		};
 		return true;
 	};
@@ -149,15 +243,15 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 			onPurseAlreadyPresent: Privacy.onPurseAlreadyPresent
 		};
 		// Privacy.enableOn remains!
-		delete Privacy.priviledgedMethodOn;
+		delete Privacy.privilegedMethodOn;
 		delete Privacy.onImproperMethod;
 		delete Privacy.onImproperPurse;
 		delete Privacy.onImproperPurseKey;
 		delete Privacy.onPurseAlreadyPresent;
 		if (_HierarchicalPurse.coreMethodsEnabled) {
 			// Object.prototype.enablePrivacy remains!
-			delete Object.prototype.priviledgedMethod;
-			delete Function.prototype.priviledgedMethod;
+			delete Object.prototype.privilegedMethod;
+			delete Function.prototype.privilegedMethod;
 		}
 	};
 });

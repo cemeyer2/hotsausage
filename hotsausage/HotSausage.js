@@ -208,7 +208,9 @@
 		_HS.isLocked = false; //addition
 		
 		//set the newObject attribute of the purse to _newObject, defined way above
-		_HS.newObject = _newObject;	
+		_HS.newObject = _newObject;
+		
+		//returns the targets prototype
 		_HS.delegateOf = function (target) {
 			return target.constructor.prototype;
 			// Alternate ways to access the target's prototype (aka delegate):
