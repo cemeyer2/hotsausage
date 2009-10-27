@@ -277,6 +277,29 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		};
 		return true;
 	};
+	
+	/**
+	 * enables privacy for this object. This must be called before adding privileged methods to an object.
+	 * The purse is returned from this call, which must be safeguarded to ensure that it is not exposed. Use
+	 * the reference to the purse to set protected properties of an object.
+	 * @name enablePrivacy
+	 * @memberOf Object
+	 * @function
+	 * @returns {Object} the purse
+	 * @example 
+	 * var Person = function(name, ssn){
+	 * 		//make this variable private
+	 * 		var purse = this.enablePrivacy();
+	 * 		purse.ssn = ssn;
+	 * 		
+	 * 		this.privilegedMethod("getSSN", function(){
+	 * 			return this.ssn;
+	 * 		});
+	 * };
+	 * 
+	 * var joe = new Person("Joe", "123-45-6789");
+	 * var ssn = joe.getSSN(); //"123-45-6789"
+	 */
 		
 	/**
 	 * locks down this module by removing several methods: HotSausage.Privacy.privilegedMethodOn, HotSausage.Privacy.onImproperMethod,

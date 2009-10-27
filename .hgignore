@@ -5,3 +5,5 @@ jsdoc/out
 
 syntax: regexp
 ^build/HotSausage_full\.js$
+syntax: regexp
+^build/HotSausage_full-min\.js$
