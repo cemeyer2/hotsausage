@@ -287,18 +287,45 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @function
 	 * @returns {Object} the purse
 	 * @example 
-	 * var Person = function(name, ssn){
-	 * 		//make this variable private
-	 * 		var purse = this.enablePrivacy();
+	 *
+	 * var Person = function (name, ssn) {
+	 * 		// make this variable private
+	 * 		var purse = HotSausage.Privacy.enableOn();
+	 * 		purse.name = name;
 	 * 		purse.ssn = ssn;
-	 * 		
-	 * 		this.privilegedMethod("getSSN", function(){
-	 * 			return this.ssn;
-	 * 		});
 	 * };
 	 * 
+	 * HotSausage.Privacy.privilegedMethodOn(Person, "safeSSN", function () {
+	 * 		var ssn = this.ssn;
+	 * 		var length = ssn.length;
+	 *		var lastFour = ssn.slice(length - 5, length - 1);
+	 * 		return lastFour;
+	 * });
+	 *
 	 * var joe = new Person("Joe", "123-45-6789");
-	 * var ssn = joe.getSSN(); //"123-45-6789"
+	 * var ssn = joe.safeSSN(); //"6789"
+	 *
+	 * - OR -
+	 *
+	 * HotSausage.Privacy.installCoreMethods();
+	 *
+	 * var Person = function (name, ssn) {
+	 * 		// make this variable private
+	 * 		var purse = this.enablePrivacy();
+	 * 		purse.name = name;
+	* 		purse.ssn = ssn;
+	 * };
+	 * 
+	 * Person.privilegedMethod("safeSSN", function () {
+	 * 		var ssn = this.ssn;
+	 * 		var length = ssn.length;
+	 *		var lastFour = ssn.slice(length - 5, length - 1);
+	 * 		return lastFour;
+	 * });
+	 *
+	 * var joe = new Person("Joe", "123-45-6789");
+	 * var ssn = joe.safeSSN(); //"6789"
+	 *
 	 */
 		
 	/**
