@@ -1,3 +1,5 @@
+console.profile();
+
 HotSausage.installCoreMethods();
 
 var PersonHS = function(ssn){
@@ -8,8 +10,11 @@ PersonHS.privilegedMethod("getSSN", function(){return this.ssn;});
 HotSausage.lock();
 
 
-var PersonClosure = function(ssn){
+var PersonClosure = function(ssn, a, b, c){
 	this.getSSN = function(){return ssn;};
+	this.getA = function(){return a;};
+	this.getB = function(){return b;};
+	this.getC = function(){return c;};
 };
 
 var PersonVar = function(ssn){
@@ -19,7 +24,11 @@ var PersonVar = function(ssn){
 
 PersonVar.prototype.getSSN = function(){return this._pp.ssn;};
 
+<<<<<<< local
+var iterations = 5000;
+=======
 var iterations = 25000;
+>>>>>>> other
 
 //move the accessing to a function to try to limit engine optimization
 var accessor = function(p){
@@ -73,3 +82,5 @@ for(i = 0; i < iterations; i++){
 }
 then = new Date().getTime();
 document.write("Var: "+(then-now)+" ms<br/>");
+
+console.profileEnd("Hot Links!");

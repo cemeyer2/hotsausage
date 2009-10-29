@@ -19,7 +19,18 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	var _newObject = _HierarchicalPurse.newObject;
 	var _usingSimpleEncapsulation = false;
 	var _SabotageHandlers = Privacy;
-	var _ActiveTransporters = _newObject();
+	var _ActiveTransporter = _newObject();
+	var _CurrentSlot = _newObject();
+
+
+	var FLOOR = Math.floor;
+	var RANDOM = Math.random;
+
+	var _newSessionKey = function () {
+		var a = FLOOR(RANDOM() * 0x10000);
+		var b = FLOOR(RANDOM() * 0x10000);
+		return String.fromCharCode(a, b);
+	};
 	
 	/**
 	 * The only way to get at the purse of a target
@@ -30,17 +41,17 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @returns {Object} the purse of the target
 	 */
 	var _getPurseOf = function (target) {
-		var _purse;
-		var sessionKey = Math.random(),
-			transporter = function (aPurse) {_purse = aPurse;};
-		_ActiveTransporters[sessionKey] = transporter;
-		target._pp(sessionKey); /// The purse is set here!
-		delete _ActiveTransporters[sessionKey];
-		return _purse;
-		/// NOTE:   _ActiveTransporters is not threadsafe, but is 
+		var purse;
+		var sessionKey = _newSessionKey();
+		_ActiveTransporter[sessionKey] = _CurrentSlot;
+		target._pp(sessionKey); /// The current transporter slot is written here!
+		purse = _ActiveTransporter[sessionKey];
+		delete _ActiveTransporter[sessionKey];
+		return purse;
+		/// NOTE:   _ActiveTransporter is not threadsafe, but is 
 		///			straight forward to be made so when necessary.
 	};
-		
+
 	/**
 	 * returns a new privileged method. in the implementation function, this
 	 * will refer to the purse of the behavior the function is being added to,
@@ -111,15 +122,27 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		}
 		var	_purse = _newObject(target);
 		target._pp = function getPurse(sessionKey) {
-			var transporter = _ActiveTransporters[sessionKey];
-			if (transporter === undefined) {
+			if (_ActiveTransporter[sessionKey] !== _CurrentSlot) {
 				return _SabotageHandlers.onImproperPurseKey(this, sessionKey);
 			}
-			transporter(_purse);
+			_ActiveTransporter[sessionKey] = _purse;
 		};
 		return _purse;
 	};
 
+/*
+	var _attachProtectedProperties = function (target) {
+		if (target._pp !== undefined) {
+			return _SabotageHandlers.onPurseAlreadyPresent(target);
+		}
+		var	_purse = _newObject(target);
+		target._pp = function getPurse(sessionKey) {
+			_ActiveTransporter = _purse;
+		};
+		return _purse;
+	};
+*/	
+	
 	// Most probably never going to use this since _pp pattern is adequate and simpler.
 	// casualProtectedProperties
 	/**

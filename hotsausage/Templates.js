@@ -6,9 +6,10 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 	var SNAPSHOT_ID = "_snapshotId";
 	
 	var _putMethod = function (target, methodName, impFunc) {
+		var purse = target._pp;
 		target[methodName] = impFunc;
-		target._pp._methods[methodName] = impFunc;
-		return (target._pp._methodCount += 1);
+		purse._methods[methodName] = impFunc;
+		return (purse._methodCount += 1);
 	};
 
 	var _deleteMethod = function (target, methodName) {
@@ -71,8 +72,10 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 		_constructor.prototype = _behavior; 
 		_behavior.newInstance = function () {
 			var instance = new _constructor();
-			instance._pp = _newObject();
-			instance._pp._instanceId = _nextInstanceId(_behavior);
+			var purse = _newObject();
+			purse._instanceId = _nextInstanceId(_behavior);
+			purse._behavior = _behavior;
+			instance._pp = purse;
 			return instance;
 		};
 		// newInstance is one of the few methods that doesn't go into the methodDict 
