@@ -1,4 +1,6 @@
-console.profile();
+if(HotSausage.isDefined(console.profile)){
+	console.profile();
+}
 
 HotSausage.installCoreMethods();
 
@@ -79,4 +81,6 @@ for(i = 0; i < iterations; i++){
 then = new Date().getTime();
 document.write("Var: "+(then-now)+" ms<br/>");
 
-console.profileEnd("Hot Links!");
+if(HotSausage.isDefined(console.profileEnd)){
+	console.profileEnd("Hot Links!");
+}
