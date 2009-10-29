@@ -8,6 +8,7 @@ var construct = function(){
 		return this.protecteditem;
 	});
 };
+HotSausage.lock();
 
 var foo = new construct();
 alert(foo.bar());
