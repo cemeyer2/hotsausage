@@ -22,10 +22,16 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	var _ActiveTransporter = _newObject();
 	var _CurrentSlot = _newObject();
 
-
 	var FLOOR = Math.floor;
 	var RANDOM = Math.random;
 
+	/**
+	 * The only way to get at the purse of a target
+	 * @function
+	 * @inner
+	 * @name _newSessionKey
+	 * @returns {String} a string representing the new session key
+	 */
 	var _newSessionKey = function () {
 		var a = FLOOR(RANDOM() * 0x10000);
 		var b = FLOOR(RANDOM() * 0x10000);
