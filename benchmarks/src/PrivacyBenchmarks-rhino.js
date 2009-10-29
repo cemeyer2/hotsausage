@@ -117,4 +117,4 @@ for(var count = 0; count < testcount; count=count+1){
 	var then = new Date().getTime();
 	times["var"].push(then-now);
 }
-java.lang.System.out.println("Var: "+(average(times["var"]))+" ms");
+java.lang.System.out.println("Var: "+(average(times["var"]))+" ms\n\n\n\n");
