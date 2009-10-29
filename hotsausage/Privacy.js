@@ -319,7 +319,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 *
 	 * var Person = function (name, ssn) {
 	 * 		// make this variable private
-	 * 		var purse = HotSausage.Privacy.enableOn();
+	 * 		var purse = HotSausage.Privacy.enableOn(this);
 	 * 		purse.name = name;
 	 * 		purse.ssn = ssn;
 	 * };
@@ -334,12 +334,12 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * var joe = new Person("Joe", "123-45-6789");
 	 * var ssn = joe.safeSSN(); //"6789"
 	 *
-	 * - OR -
+	 *@example
 	 *
 	 * HotSausage.Privacy.installCoreMethods();
 	 *
 	 * var Person = function (name, ssn) {
-	 * 		// make this variable private
+	 * 		// make purse variable private
 	 * 		var purse = this.enablePrivacy();
 	 * 		purse.name = name;
 	* 		purse.ssn = ssn;
@@ -355,6 +355,26 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * var joe = new Person("Joe", "123-45-6789");
 	 * var ssn = joe.safeSSN(); //"6789"
 	 *
+	 */
+	
+	/**
+	 * adds a privileged method to an object. this in the implementation function will refer
+	 * to the purse of the object
+	 * @function
+	 * @name privilegedMethod
+	 * @memberOf Object
+	 * @param {String} methodName the name of the function to add
+	 * @param {Function} func the implementation of the new privileged method
+	 */
+	
+	/**
+	 * adds a privileged method to a function. this in the implementation function will refer
+	 * to the purse of the object
+	 * @function
+	 * @name privilegedMethod
+	 * @memberOf Function
+	 * @param {String} methodName the name of the function to add
+	 * @param {Function} func the implementation of the new privileged method
 	 */
 		
 	/**
