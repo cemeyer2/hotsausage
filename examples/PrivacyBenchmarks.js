@@ -26,27 +26,27 @@ var accessor = function(p){
 	p.getSSN();
 };
 
-//document.write("constructing:<br/>");
-//var now = new Date().getTime();
-//for(var i = 0; i < iterations; i++){
-//	var person = new PersonHS("123-45-6789");
-//}
-//var then = new Date().getTime();
-//document.write("HS: "+(then-now)+" ms<br/>");
-//
-//now = new Date().getTime();
-//for(i = 0; i < iterations; i++){
-//	person = new PersonClosure("123-45-6789");
-//}
-//then = new Date().getTime();
-//document.write("Closure: "+(then-now)+" ms<br/>");
-//
-//now = new Date().getTime();
-//for(i = 0; i < iterations; i++){
-//	person = new PersonVar("123-45-6789");
-//}
-//then = new Date().getTime();
-//document.write("Var: "+(then-now)+" ms<br/>");
+document.write("constructing:<br/>");
+var now = new Date().getTime();
+for(var i = 0; i < iterations; i++){
+	var person = new PersonHS("123-45-6789");
+}
+var then = new Date().getTime();
+document.write("HS: "+(then-now)+" ms<br/>");
+
+now = new Date().getTime();
+for(i = 0; i < iterations; i++){
+	person = new PersonClosure("123-45-6789");
+}
+then = new Date().getTime();
+document.write("Closure: "+(then-now)+" ms<br/>");
+
+now = new Date().getTime();
+for(i = 0; i < iterations; i++){
+	person = new PersonVar("123-45-6789");
+}
+then = new Date().getTime();
+document.write("Var: "+(then-now)+" ms<br/>");
 
 document.write("<br/><br/>");
 document.write("accessing properties:<br/>");
