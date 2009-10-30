@@ -94,7 +94,6 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 		};
 		_constructor.prototype = _behavior; 
 		_behavior.newInstance = _constructor;
-		};
 		// newInstance is one of the few methods that doesn't go into the methodDict 
 		// to avoid copying it when creating a new behavior only to overwrite it with 
 		// a new newInstance method.
@@ -224,8 +223,10 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 
 	originalInstance.method("hasEqualBehaviorAs", originalInstance.hasIdenticalBehaviorAs);
 
-	originalInstance.method("isIdentical", function (that) {return (that === this);};
-				
+	originalInstance.method("isIdentical", function (that) {
+		return (this === that);
+	});
+	
 	originalInstance.method("copyAsTemplate", function (templateName, targetModule_) {
 		return _newTemplate(this, templateName, targetModule_);
 	});

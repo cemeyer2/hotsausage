@@ -2,8 +2,9 @@ desc 'Builds HotSausage full file from source'
 task :default do
  
   # files that are super classes of others should come first
-  sources  = ["../hotsausage/HotSausage.js", "../hotsausage/Privacy.js"]
+  sources  = ["../hotsausage/HotSausage.js", "../hotsausage/Privacy.js", "../hotsausage/Templates.js"]
  
+  #comment this line out because there is some stuff in the hs dir that we dont want
   #sources += Dir.glob("../hotsausage/**/*.js").reject{|f| sources.include? f}.reject{|f| f.include? "HotSausage_full"}
  
   hotsausage = File.new('HotSausage_full.js', 'w')
