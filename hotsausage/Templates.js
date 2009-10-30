@@ -197,6 +197,8 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 		return _newTemplate;
 	};
  
+	//M3->the parameter object needs a template() function so that when passed to _newTemplate, line 187 runs properly
+	//maybe should be: {template: function (){ return Object.prototype;}}
 	var originalInstance = _newTemplate({__template: Object.prototype}, "Clone");
 	
 	_setMethod(originalInstance, "method", function (methodName, impFunc) {
