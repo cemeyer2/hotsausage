@@ -318,7 +318,7 @@
 		 * Installs a method. This function is only available if core methods have been installed.
 		 * @function
 		 * @name method
-		 * @memberOf Object
+		 * @memberOf Object.prototype
 		 * @param {String} methodName the name of the method to install
 		 * @param {Function} implementationFunc the implementation of the method to install
 		 * @see HotSausage#installCoreMethods
@@ -328,7 +328,7 @@
 		 * Installs a method. This function is only available if core methods have been installed.
 		 * @function
 		 * @name method
-		 * @memberOf Function
+		 * @memberOf Function.prototype
 		 * @param {String} methodName the name of the method to install
 		 * @param {Function} implementationFunc the implementation of the method to install
 		 * @see HotSausage#installCoreMethods

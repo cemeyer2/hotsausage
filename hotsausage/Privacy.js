@@ -276,6 +276,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @deprecated
 	 * @name useSimpleEncapsulation
 	 * @memberOf HotSausage.Privacy
+	 * @function
 	 */
 	Privacy.useSimpleEncapsulation = function () {
 		if (_usingSimpleEncapsulation) {return;} 
@@ -304,15 +305,26 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		Function.prototype.privilegedMethod = function (methodName, func) {
 			_setPrivilegedMethod(this.prototype, methodName, func);
 		};
+		Object.prototype.lock = function () {
+			//this.prototype.enablePrivacy remains
+			delete this.prototype.privilegedMethod;
+		};
 		return true;
 	};
+	
+	/*
+	 * locks down this object by removing this.prototype.privilegedMethod
+	 * @function
+	 * @name lock
+	 * @memberOf Object.prototype
+	 */
 	
 	/**
 	 * enables privacy for this object. This must be called before adding privileged methods to an object.
 	 * The purse is returned from this call, which must be safeguarded to ensure that it is not exposed. Use
 	 * the reference to the purse to set protected properties of an object.
 	 * @name enablePrivacy
-	 * @memberOf Object
+	 * @memberOf Object.prototype
 	 * @function
 	 * @returns {Object} the purse
 	 * @example 
@@ -362,7 +374,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * to the purse of the object
 	 * @function
 	 * @name privilegedMethod
-	 * @memberOf Object
+	 * @memberOf Object.prototype
 	 * @param {String} methodName the name of the function to add
 	 * @param {Function} func the implementation of the new privileged method
 	 */
@@ -372,7 +384,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * to the purse of the object
 	 * @function
 	 * @name privilegedMethod
-	 * @memberOf Function
+	 * @memberOf Function.prototype
 	 * @param {String} methodName the name of the function to add
 	 * @param {Function} func the implementation of the new privileged method
 	 */
