@@ -24,11 +24,7 @@ var PersonVar = function(ssn){
 
 PersonVar.prototype.getSSN = function(){return this._pp.ssn;};
 
-<<<<<<< local
-var iterations = 5000;
-=======
 var iterations = 25000;
->>>>>>> other
 
 //move the accessing to a function to try to limit engine optimization
 var accessor = function(p){

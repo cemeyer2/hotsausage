@@ -1,9 +1,10 @@
 "use strict";
 
-HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
-	var _newObject = _HierarchicalPurse.newObject;
+HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
+	var HS = Templates.module();
+	var _newObject = _Templates_HS.newObject;
 
-	var SNAPSHOT_ID = "_snapshotId";
+	var NEW_INSTANCE = "newInstance";
 	
 	var _putMethod = function (target, methodName, impFunc) {
 		var purse = target._pp;
@@ -36,11 +37,11 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 	};
 	
 	var _nextSnapshotId = function (target) {
-		return (_templateOf(target)._pp._snapshotCount += 1);
+		return (target.template()._pp._snapshotCount += 1);
 	};
 
 	var _nextInstanceId = function (target) {
-		return (_templateOf(target)._pp._instanceCount += 1);
+		return (target.template()._pp._instanceCount += 1);
 	};
 	
 	var _behaviorOf = function (target) {
@@ -60,7 +61,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 	var _copyMethods = function (target, sourceInstance, sourceTemplate) {
 		var sourceBehavior = _behaviorOf(sourceInstance);
 		_ensureMethodDictionary(target);
-		if (sourceTemplate !== sourceBehavior) {
+		if (sourceBehavior !== sourceTemplate) {
 			_copyMethodDictionary(sourceBehavior, target);
 		}
 		_copyMethodDictionary(sourceInstance, target);
@@ -68,21 +69,19 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 	};
 
 	var _attachMethod_newInstance = function (_behavior) {
-		var _constructor = function () {};
-		_constructor.prototype = _behavior; 
-		_behavior.newInstance = function () {
-			var instance = new _constructor();
-			var purse = _newObject();
-			purse._instanceId = _nextInstanceId(_behavior);
+		var _instanceConstructor = function () {};
+		var impfunc = function () {
+			var instance = new _instanceConstructor();
+			var purse = (instance._pp = _newObject());
 			purse._behavior = _behavior;
-			instance._pp = purse;
+			purse._instanceId = _nextInstanceId(_behavior);
 			return instance;
 		};
-		// newInstance is one of the few methods that doesn't go into the methodDict 
-		// to avoid copying it when creating a new behavior only to overwrite it with 
-		// a new newInstance method.
+		_instanceConstructor.prototype = _behavior; 
+		_putMethod(_behavior, NEW_INSTANCE, impfunc);
 	};
 
+/*
 	var _attachMethod_newInstance = function (_behavior) {
 		var _constructor = function ConstructorType() {
 			if (this instanceof ConstructorType) {
@@ -99,15 +98,16 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 		// to avoid copying it when creating a new behavior only to overwrite it with 
 		// a new newInstance method.
 	};
+*/
 	
 	var _newBehavior = function (sourceTemplate) {
-		var _behavior = _newObject(sourceTemplate);
-		_behavior._pp = _newObject();
-		_behavior.behavior = function () {return _behavior;};
+		var behavior = _newObject(sourceTemplate);
+		behavior._pp = _newObject();
+		return behavior;
 	};
 	
 	var _newBehaviorSnapshotFrom = function (sourceInstance) {
-		var sourceTemplate = sourceInstance.__template;
+		var sourceTemplate = sourceInstance.template();
 		var behaviorSnapshot = _newBehavior(sourceTemplate);
 		behaviorSnapshot._pp._snapshotId = sourceInstance._pp._snapshotId;
 		_copyMethods(behaviorSnapshot, sourceInstance, sourceTemplate);
@@ -118,7 +118,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 	var _deferred_newInstance = function () {
 		var behaviorSnapshot = _newBehaviorSnapshotFrom(this);
 		var delegated_newInstance = behaviorSnapshot.newInstance;
-		this.newInstance = delegated_newInstance;
+		this.newInstance = delegated_newInstance;// Not sure if should use _putMethod here M3.
 		return delegated_newInstance();
 	};
 	
@@ -134,120 +134,137 @@ HotSausage.newSubmodule("Templates", function (Templates, _HierarchicalPurse) {
 		if (target.isTemplate() || target.newInstance === _deferred_newInstance) {
 			// target is template or has local methods but no copies yet
 		} else {
-			// target is either adding its first local method, or has already 
-			// snapshotted a behavior, and since is adding a new local method.
-			target.newInstance = _deferred_newInstance;
+			// target is either adding its first local method, or has already spawned 
+			// a snapshot behavior, and since doing so, is adding a new local method again.
+			target.newInstance = _deferred_newInstance;// Not sure if should use _putMethod here M3.
 			target._pp._snapshotId = _nextSnapshotId(behavior);
 			_ensureMethodDictionary(target);
 		}
 		_putMethod(target, methodName, impFunc);
 	};	
 
-	var _onUnexpectedConstructorArguments = function (constructor, newInstance) {
-		_HierarchicalPurse.handleError(
-			"UnexpectedConstructorArguments",
-			"Not expecting any arguments!"
+	var _onUnexpectedConstructorArguments = function (template) {
+		HS.handleError(
+			"UnexpectedConstructorArguments", 
+			"No arguments expected to simply return the " + template.name() + " template object!"
 		);
-		return newInstance;
+		return template;
 	};
 
 	var _newSafeDualUseConstructor = function (_template, templatePrototype) {
-		var constructor = function ConstructedType(/* arguments */) {
+		var constructor = function CopyFromTemplate(/* arguments */) {
 			var newInstance;
-			if (this instanceof ConstructedType) {
+			if (this instanceof CopyFromTemplate) {
 				newInstance = _template.newInstance();
 				newInstance.initFromArgs(arguments);
 				return newInstance;
 			}
-			if (arguments.length > 0) {
-				return _onUnexpectedConstructorArguments(ConstructedType, _template);
-			}
+			if (arguments.length > 0) {return _onUnexpectedConstructorArguments(_template);}
 			return _template;
 		};
 		constructor.prototype = templatePrototype;
 		return constructor;
 	};
 
-	var _onNameForTemplateAlreadyAssigned = function (module, name, factoryMethod) {
-		_HierarchicalPurse.handleError(
+	var _onNameForTemplateAlreadyAssigned = function (module, name) {
+		HS.handleError(
 			"CannotCreateTemplateName",
 			"Property " + name + "already defined in " + module.toString()
 		);
 		return factoryMethod;
 	};
 
-	var _attachFactoryMethod = function (name, factoryMethod, targetModule_) {
+	var _attachFactoryMethod = function (templateName, factoryMethod, targetModule_) {
 		var module = targetModule_ || Templates;
-		if (module[name]) {
-			return _onNameForTemplateAlreadyAssigned(module, name, factoryMethod);
-		}
-		return (module[name] = factoryMethod);
+		if (module[templateName]) {return _onNameForTemplateAlreadyAssigned(module, name);}
+		return (module[templateName] = factoryMethod);
 	};
 
-	var _newTemplate = function (sourceInstance, name, targetModule_) {
+	var _attachMethod_template = function (template) {
+		_putMethod(template, "template", HS.constantGetterFor(template));
+	};
+	
+	var _newTemplate = function (sourceInstance, templateName, targetModule) {
 		var sourceTemplate = sourceInstance.template();
 		var newTemplatePrototype = _newObject(sourceTemplate);
-		var _newTemplate = _newBehavior(newTemplatePrototype);
-		var factoryMethod = _newSafeDualUseConstructor(_newTemplate, newTemplatePrototype);
-		_newTemplate.template = function () {return _newTemplate;};
-		_newTemplate._pp._snapshotCount = 0;
-		_newTemplate._pp._instanceCount = 0;
-		_copyMethods(_newTemplate, sourceInstance, sourceTemplate);
-		_attachMethod_newInstance(_newTemplate);
-		_attachFactoryMethod(factoryMethod, targetModule_);
-		return _newTemplate;
+		var newTemplate = _newBehavior(newTemplatePrototype);
+		var purse = newTemplate._pp;
+		var factoryMethod = _newSafeDualUseConstructor(newTemplate, newTemplatePrototype);
+		_attachFactoryMethod(templateName, factoryMethod, targetModule);
+		
+		purse._name = templateName;
+		purse._snapshotCount = 0;
+		purse._instanceCount = 0;
+		if (sourceInstance !== sourceTemplate) {
+			_copyMethods(newTemplate, sourceInstance, sourceTemplate);
+		}
+		_attachMethod_newInstance(newTemplate);
+		_attachMethod_template(newTemplate);
+		return newTemplate;
 	};
  
-	var originalInstance = _newTemplate({__template: Object.prototype}, "Clone");
+	var instance0 = _newTemplate({template: function () {Object.prototype}}, "Clone");
 	
-	_setMethod(originalInstance, "method", function (methodName, impFunc) {
+	_setMethod(instance0, "method", function (methodName, impFunc) {
 		_setMethod(this, methodName, impFunc);
 	});
 	
-	originalInstance.method("isTemplate", function () {return this === this.__template;});
+	instance0.method("isTemplate", function () {return this === this.template();});
 	
-	originalInstance.method("template", function () {return this._pp._template;});
+	instance0.method("templateName", function () {return this.template()_pp._name;});
 	
-	originalInstance.method("basicName", function () {
-		var purse = this._pp;
-		var name = purse._templateName;
-		if (this.isTemplate()) {return name;}
-		if (this.hasOwnProperty(SNAPSHOT_ID)) {return "_" + name + purse._snapshotId;}
-		/////// name = <== firstchar as lowercase;
-		return name + purse._instanceId;
+	instance0.method("basicName", function () {
+		var template = this.template();
+		var name = template._pp._name;
+		var purse, instanceId, snapshotId;
+		if (this === template) {return name;}
+		purse = this._pp;
+		instanceId = purse._instanceId;
+		snapshotId = purse._snapshotId;
+		if (instanceId === undefined) {return ["_", name, ":s", snapshotId].join("");}  // Behavior
+		snapshotId = (snapshotId) ? ":s" + snapshotId : "";
+		return [name.charAt(0).toLowerCase(), name.slice(1), instanceId, snapshotId].join("");
 	});
 	
-	originalInstance.method("hasIdenticalBehaviorAs", function (that) {
-		if (that === this) {return true;}
-		return (that.newInstance === this.newInstance);
+	instance0.method("isSameTypeAs", function (that) {
+		if (this === that) {return true;}
+		return (this.template() === that.template());
 	});
 
-	originalInstance.method("hasEqualBehaviorAs", originalInstance.hasIdenticalBehaviorAs);
+	instance0.method("hasIdenticalBehaviorAs", function (that) {
+		if (this === that) {return true;}
+		return (this.newInstance === that.newInstance);
+	});
 
-	originalInstance.method("isIdentical", function (that) {return (that === this);};
+	instance0.method("hasEqualBehaviorAs", function (that) {
+		// This method can be overridden.
+		return this.hasIdenticalBehaviorAs(that);
+	});
+
+	instance0.method("isIdentical", function (that) {return (this === that);};
 				
-	originalInstance.method("copyAsTemplate", function (templateName, targetModule_) {
+	instance0.method("copyAsTemplate", function (templateName, targetModule_) {
 		return _newTemplate(this, templateName, targetModule_);
 	});
 	
-	originalInstance.method("initFromArgs", function (argumentsObject) {
-		// Reimplement this method to initialize a blank copy.
+	instance0.method("initFromArgs", function (argumentsObject) {
+		// Reimplement this method to initialize a new blank instance copy.
 	});
 	
-	originalInstance.method("name", function (that) {
+	instance0.method("name", function (that) {
 		// This method can be overridden.
 		return this.basicName();
 	});
 	
-	originalInstance.method("isEqual", function (that) {
-		// This method should be overridden.
+	instance0.method("isEqual", function (that) {
+		// This method SHOULD be overridden.
 		return this.isIdentical(that);
 	});
 	
-	originalInstance.method("blankCopy", function () {return this.newInstance();});
+	instance0.method("blankCopy", instance0.newInstance});
 	
-	originalInstance.method("copy", function () {
-		// This method should be overridden.
+	instance0.method("copy", function () {
+		// This method SHOULD be overridden.
 		return this.newInstance();
 	});
 	

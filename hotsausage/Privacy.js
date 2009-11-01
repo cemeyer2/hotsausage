@@ -1,22 +1,23 @@
 "use strict";
 /**
  * HotSausage Privacy Module
- * @author Marice Rabb
+ * @author Maurice Rabb
  * @author Charlie Meyer
  * @fileOverview defines the Privacy module of HotSausage
  */
 /**
  * @namespace HotSausage.Privacy
  * @name HotSausage.Privacy
- * @augments _Module
+ * @augments _Module     <<<<--- I am planning to remove this. M3
  * @requires HotSausage
  */
 
-HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
+HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
+	var HS = Privacy.module();
 	//returns the targets prototype
-	var _delegateOf = _HierarchicalPurse.delegateOf;
+	var _delegateOf = _Privacy_HS.delegateOf;
 	//gets an (possibly) empty object depending on the parameter
-	var _newObject = _HierarchicalPurse.newObject;
+	var _newObject = _Privacy_HS.newObject;
 	var _usingSimpleEncapsulation = false;
 	var _SabotageHandlers = Privacy;
 	var _ActiveTransporter = _newObject();
@@ -42,11 +43,11 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * The only way to get at the purse of a target
 	 * @function
 	 * @inner
-	 * @name _getPurseOf
+	 * @name _purseOf
 	 * @param {Object} target the target we wish to get the purse of
 	 * @returns {Object} the purse of the target
 	 */
-	var _getPurseOf = function (target) {
+	var _purseOf = function (target) {
 		var purse;
 		var sessionKey = _newSessionKey();
 		_ActiveTransporter[sessionKey] = _CurrentSlot;
@@ -79,7 +80,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 					this, _behavior, _methodName, privilegedMethod
 				);
 			}
-			purse = _getPurseOf(receiver);
+			purse = _purseOf(receiver);
 			purseOwner = _delegateOf(purse);
 			if (this !== purseOwner) {
 				return _SabotageHandlers.onImproperPurse(receiver, purseOwner);
@@ -170,10 +171,10 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @deprecated
 	 */
 	var _onAttemptToLockWhileInSimpleMode = function () {
-		if (_HierarchicalPurse.handlesErrorsQuietly) {return;}
-		var error = new Error("Cannot lock which using simple encapsulation!");
-		error.name = "ImproperAttemptToLockModule";
-		throw error;
+		HS.handleError(
+			"ImproperAttemptToLockModule", "Cannot lock which using simple encapsulation!"
+		);
+		return null;
 	};
 	
 	/**
@@ -211,10 +212,8 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @returns {Object} the target, if errors are set to be handled quietly
 	 */
 	Privacy.onImproperMethod = function (target, behavior, methodName, method) {
-		if (_HierarchicalPurse.handlesErrorsQuietly) {return target;}
-		var error = new Error("Method has been moved where it doesn't belong!");
-		error.name = "ImproperMethod";
-		throw error;
+		HS.handleError("ImproperMethod", "Method has been moved where it doesn't belong!");
+		return target;
 	};
 	
 	/**
@@ -230,10 +229,10 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @returns {Object} the target, if errors are set to be handled quietly
 	 */
 	Privacy.onImproperPurse = function (target, actualPurseOwner) {
-		if (_HierarchicalPurse.handlesErrorsQuietly) {return target;}
-		var error = new Error("Another object's purse has been attached to the target object!");
-		error.name = "ImproperPurse";
-		throw error;
+		HS.handleError(
+			"ImproperPurse", "Another object's purse has been attached to the target object!"
+		);
+		return target;
 	};
 	
 	/**
@@ -248,10 +247,10 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @param {Object} an empty object, if errors are set to be handled quietly
 	 */
 	Privacy.onImproperPurseKey = function (target, invalidKey) {
-		if (_HierarchicalPurse.handlesErrorsQuietly) {return _newObject();}
-		var error = new Error("Attempt to access the target's purse using the wrong session key!");
-		error.name = "ImproperPurseKey";
-		throw error;
+		HS.handleError(
+			"ImproperPurseKey", "Attempt to access the target's purse using the wrong session key!"
+		);
+		return _newObject();
 	};
 	
 	/**
@@ -266,10 +265,8 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @returns {null} null if errors are set to be handled quietly
 	 */
 	Privacy.onPurseAlreadyPresent = function (target) {
-		if (_HierarchicalPurse.handlesErrorsQuietly) {return null;}
-		var error = new Error("Target already has a purse!");
-		error.name = "ImproperAttemptToAttachPurse";
-		throw error;
+		HS.handleError("ImproperAttemptToAttachPurse", "Target already has a purse!");
+		return null;
 	};
 	
 	/**
@@ -293,7 +290,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @return {Boolean} true if methods were successfully installed, false otherwise
 	 */
 	Privacy.installCoreMethods = function () {
-		if (_HierarchicalPurse.coreMethodsEnabled) {return true;} 
+		if (_Privacy_HS.coreMethodsEnabled) {return true;} 
 		if (Object.prototype.enablePrivacy) {return false;}
 		if (Object.prototype.privilegedMethod) {return false;}
 		if (Function.prototype.privilegedMethod) {return false;}
@@ -366,7 +363,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 	 * @memberOf HotSausage.Privacy
 	 */
 	Privacy.lock = function () {
-		if (_HierarchicalPurse.isLocked) {return;}
+		if (_Privacy_HS.isLocked) {return;}
 		if (_usingSimpleEncapsulation) {return _onAttemptToLockWhileInSimpleMode();}
 		_SabotageHandlers = {
 			onImproperMethod: Privacy.onImproperMethod,
@@ -380,7 +377,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _HierarchicalPurse) {
 		delete Privacy.onImproperPurse;
 		delete Privacy.onImproperPurseKey;
 		delete Privacy.onPurseAlreadyPresent;
-		if (_HierarchicalPurse.coreMethodsEnabled) {
+		if (_Privacy_HS.coreMethodsEnabled) {
 			// Object.prototype.enablePrivacy remains!
 			delete Object.prototype.privilegedMethod;
 			delete Function.prototype.privilegedMethod;
