@@ -6,15 +6,23 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 
 	var NEW_INSTANCE = "newInstance";
 	
+	var _purseOf = function (target) {
+		return target._pp;
+	};
+
+	var _setPurseOf = function (target, purse) {
+		return target._pp = purse;
+	};
+	
 	var _putMethod = function (target, methodName, impFunc) {
-		var purse = target._pp;
+		var purse = _purseOf(target);
 		target[methodName] = impFunc;
 		purse._methods[methodName] = impFunc;
 		return (purse._methodCount += 1);
 	};
 
 	var _deleteMethod = function (target, methodName) {
-		var purse = target._pp;
+		var purse = _purseOf(target);
 		if (methodName in purse._methods) {
 			delete target[methodName];
 			delete purse._methods[methodName];
@@ -24,33 +32,33 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 	
 	var _ensureMethodDictionary = function (target) {
-		var purse = target._pp;
+		var purse = _purseOf(target);
 		if (purse._methods) {return;}
 		purse._methods = _newObject();
 		purse._methodCount = 0;
 	};
 
 	var _deleteMethodDictionary = function (target) {
-		var purse = target._pp;
+		var purse = _purseOf(target);
 		delete purse._methods;
 		delete purse._methodCount;
 	};
 	
 	var _nextSnapshotId = function (target) {
-		return (target.template()._pp._snapshotCount += 1);
+		return (_purseOf(target.template())._snapshotCount += 1);
 	};
 
 	var _nextInstanceId = function (target) {
-		return (target.template()._pp._instanceCount += 1);
+		return (_purseOf(target.template())._instanceCount += 1);
 	};
 	
 	var _behaviorOf = function (target) {
-		return target._pp._behavior;
+		return _purseOf(target)._behavior;
 		// return Object.getPrototypeOf(target)
 	};
 	
 	var _copyMethodDictionary = function (source, target) {
-		var methods = source._pp._methods;
+		var methods = _purseOf(source)._methods;
 		var methodName;
 		if (methods === undefined) {return;}
 		for (methodName in methods) {
@@ -72,7 +80,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		var _instanceConstructor = function () {};
 		var impfunc = function () {
 			var instance = new _instanceConstructor();
-			var purse = (instance._pp = _newObject());
+			var purse = _setPurseOf(instance, _newObject());
 			purse._behavior = _behavior;
 			purse._instanceId = _nextInstanceId(_behavior);
 			return instance;
@@ -102,14 +110,14 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	
 	var _newBehavior = function (sourceTemplate) {
 		var behavior = _newObject(sourceTemplate);
-		behavior._pp = _newObject();
+		_setPurseOf(behavior, _newObject());
 		return behavior;
 	};
 	
 	var _newBehaviorSnapshotFrom = function (sourceInstance) {
 		var sourceTemplate = sourceInstance.template();
 		var behaviorSnapshot = _newBehavior(sourceTemplate);
-		behaviorSnapshot._pp._snapshotId = sourceInstance._pp._snapshotId;
+		_purseOf(behaviorSnapshot)._snapshotId = _purseOf(sourceInstance)._snapshotId;
 		_copyMethods(behaviorSnapshot, sourceInstance, sourceTemplate);
 		_attachMethod_newInstance(behaviorSnapshot);
 		return behaviorSnapshot;
@@ -137,7 +145,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 			// target is either adding its first local method, or has already spawned 
 			// a snapshot behavior, and since doing so, is adding a new local method again.
 			target.newInstance = _deferred_newInstance;// Not sure if should use _putMethod here M3.
-			target._pp._snapshotId = _nextSnapshotId(behavior);
+			_purseOf(target)._snapshotId = _nextSnapshotId(behavior);
 			_ensureMethodDictionary(target);
 		}
 		_putMethod(target, methodName, impFunc);
@@ -188,7 +196,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		var sourceTemplate = sourceInstance.template();
 		var newTemplatePrototype = _newObject(sourceTemplate);
 		var newTemplate = _newBehavior(newTemplatePrototype);
-		var purse = newTemplate._pp;
+		var purse = _purseOf(newTemplate);
 		var factoryMethod = _newSafeDualUseConstructor(newTemplate, newTemplatePrototype);
 		_attachFactoryMethod(templateName, factoryMethod, targetModule);
 		
@@ -211,14 +219,14 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	
 	instance0.method("isTemplate", function () {return this === this.template();});
 	
-	instance0.method("templateName", function () {return this.template()_pp._name;});
+	instance0.method("templateName", function () {return _purseOf(this.template())._name;});
 	
 	instance0.method("basicName", function () {
 		var template = this.template();
-		var name = template._pp._name;
+		var name = _purseOf(template)._name;
 		var purse, instanceId, snapshotId;
 		if (this === template) {return name;}
-		purse = this._pp;
+		purse = _purseOf(this);
 		instanceId = purse._instanceId;
 		snapshotId = purse._snapshotId;
 		if (instanceId === undefined) {return ["_", name, ":s", snapshotId].join("");}  // Behavior

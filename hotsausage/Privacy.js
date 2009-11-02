@@ -133,6 +133,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 				return _SabotageHandlers.onImproperPurseKey(this, sessionKey);
 			}
 			_ActiveTransporter[sessionKey] = _purse;
+			return null;
 		};
 		return _purse;
 	};
@@ -250,7 +251,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		HS.handleError(
 			"ImproperPurseKey", "Attempt to access the target's purse using the wrong session key!"
 		);
-		return _newObject();
+		return null;
 	};
 	
 	/**
