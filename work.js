@@ -90,3 +90,38 @@ function ${1:function_name} (${2:argument}) {
 
 	jasmine.Matchers.prototype.toContain = function(item) {
 	jasmine.Matchers.prototype.toNotContain = function(item) {
+
+
+	
+			var create_attachPurse = function (_Purse) {
+				return function (target) {return (target._pp = new _Purse());};
+			};
+
+			var _attachTemplatePurse = function (template, delegateSharedPurse_) {
+				var newAttachPurse;
+				var sharedPurse = _newObject(delegateSharedPurse_);
+				var Purse = function () {};
+				Purse.prototype = sharedPurse;
+				newAttachPurse = create_attachPurse(Purse);
+				sharedPurse._attachPurse = newAttachPurse;
+				return newAttachPurse(template);
+			};
+			
+			
+			var _attachMethod_newInstance = function (_behavior) {
+				var _constructor = function ConstructorType() {
+					if (this instanceof ConstructorType) {
+						this._purse = _newObject();
+						this._purse._instanceId = _nextInstanceId(_behavior);
+					} else {
+						return new ConstructorType();
+					}
+				};
+				_constructor.prototype = _behavior; 
+				_behavior.newInstance = _constructor;
+				};
+				// newInstance is one of the few methods that doesn't go into the methodDict 
+				// to avoid copying it when creating a new behavior only to overwrite it with 
+				// a new newInstance method.
+			};
+

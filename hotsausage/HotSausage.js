@@ -268,6 +268,9 @@
 
 		HS.handleError = _handleError;
 		
+		HS.isPrivate = function (propertyName) {return propertyName.charAt(0) === "_";};
+
+		HS.isPublic = function (propertyName) {return propertyName.charAt(0) !== "_";};
 		
 		/**
 		 * adds a new method to an object if the implementation function is
