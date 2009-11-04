@@ -5,136 +5,129 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	var _newObject = _Templates_HS.newObject;
 	var _hasLocalProperty = _Templates_HS.hasLocalProperty;
 	var _isPublic = HS.isPublic;
+	var _createConstantAccessor = HS.createConstantAccessor;
 	
 	var NEW_INSTANCE = "newInstance";
 	
 	var _purseOf = function (target) {return target._purse();};
 
 	var _attachMethod_purse = function (target, purse) {
-		target._purse = HS.createConstantAccessor(purse);
+		target._purse = _createConstantAccessor(purse);
+		purse._public = target;
+		return purse;
 	};
 	
-	var _copyPurseFrom = function (source, target) {
-		var sourcePurse = _purseOf(source);
-		var targetPurse = _purseOf(target);
+	var __copyPurseFrom = function (pSource, pTarget) {
 		var propertyName;
-		for (propertyName in sourcePurse) {
-			if (_isPublic(propertyName) && _hasLocalProperty(sourcePurse, propertyName)) {
-				targetPurse[propertyName] = sourcePurse[propertyName];
+		for (propertyName in pSource) {
+			if (_isPublic(propertyName) && _hasLocalProperty(pSource, propertyName)) {
+				pTarget[propertyName] = pSource[propertyName];
 			}
 		}
 	};
 	
-	var _putMethod = function (target, methodName, impFunc) {
-		var purse = _purseOf(target);
-		target[methodName] = impFunc;
-		purse._methods[methodName] = impFunc;
-		return (purse._methodCount += 1);
+	var __putMethod = function (pTarget, methodName, impFunc) {
+		pTarget._public[methodName] = impFunc;
+		pTarget._methods[methodName] = impFunc;
+		return (pTarget._methodCount += 1);
 	};
 
-	var _deleteMethod = function (target, methodName) {
-		var purse = _purseOf(target);
-		if (methodName in purse._methods) {
-			delete target[methodName];
-			delete purse._methods[methodName];
-			return (purse._methodCount -= 1);
+	var __deleteMethod = function (pTarget, methodName) {
+		if (methodName in pTarget._methods) {
+			delete pTarget._public[methodName];
+			delete pTarget._methods[methodName];
+			return (pTarget._methodCount -= 1);
 		}
-		return purse._methodCount;
+		return pTarget._methodCount;
 	};
 	
-	var _ensureMethodDictionary = function (target) {
-		var purse = _purseOf(target);
-		if (purse._methods) {return;}
-		purse._methods = _newObject();
-		purse._methodCount = 0;
+	var __ensureMethodDictionary = function (pTarget) {
+		if (pTarget._methods) {return;}
+		pTarget._methods = _newObject();
+		pTarget._methodCount = 0;
 	};
 
-	var _deleteMethodDictionary = function (target) {
-		var purse = _purseOf(target);
-		delete purse._methods;
-		delete purse._methodCount;
+	var __deleteMethodDictionary = function (pTarget) {
+		delete pTarget._methods;
+		delete pTarget._methodCount;
 	};
 	
-	var _copyMethodDictionary = function (source, target) {
-		var methods = _purseOf(source)._methods;
+	var __copyMethodDictionary = function (pSource, pTarget) {
+		var methods = pSource._methods;
 		var methodName;
 		if (methods === undefined) {return;}
 		for (methodName in methods) {
-			_putMethod(target, methodName, methods[methodName]);
+			__putMethod(pTarget, methodName, methods[methodName]);
 		}
 	};
 	
-	var _copyMethods = function (target, sourceInstance, sourceTemplate) {
-		var sourceBehavior = _purseOf(sourceInstance)._behavior;
-		_ensureMethodDictionary(target);
-		if (sourceBehavior !== sourceTemplate) {
-			_copyMethodDictionary(sourceBehavior, target);
+	var __copyMethods = function (pTarget, pSourceInstance, pSourceTemplate) {
+		var pSourceBehavior = pSourceInstance._pBehavior;
+		__ensureMethodDictionary(pTarget);
+		if (pSourceBehavior !== pSourceTemplate) {
+			__copyMethodDictionary(pSourceBehavior, pTarget);
 		}
-		_copyMethodDictionary(sourceInstance, target);
-		return target;		
+		__copyMethodDictionary(pSourceInstance, pTarget);
 	};
 
-	var _attachMethod_newObject = function (behavior, behaviorPurse) {
+	var __attach_newPObject = function (pBehavior) {
 		var _Purse = function () {};
 		var _Object = function () {};
-		_Purse.prototype = behaviorPurse; 
-		_Instance.prototype = behavior; 
-		behaviorPurse._newInstance = function (isSnapshot_) {
-			var instance = new _Object();
-			var purse = _attachMethod_purse(this, new _Purse());
-			if (isSnapshot_) {
-				purse._snapshotId = purse._nextSnapshotId();
-				purse._behavior = instance;
-			} else {
-				purse._instanceId = purse._nextInstanceId();
-			}
-			return instance;
+		_Purse.prototype = pBehavior; 
+		_Instance.prototype = pBehavior._public; 
+		pBehavior._newPObject = function () {
+			return _attachMethod_purse(new _Object(), new _Purse());
 		});
 	};
 
-	var _newBehavior = function (sourceTemplate) {
-		var behavior = _newObject(sourceTemplate);
-		var purse = _attachPurse(behavior);
-		purse._behavior = behavior;
-		return behavior;
+	var _newInstance = function (source) {
+		var pInstance = this._newPObject();
+		pInstance._instanceId = _nextInstanceId(this);
+		return pInstance._public;
 	};
 	
+	var _newPBehavior = function (pSourceTemplate) {
+		var pBehavior = pSourceTemplate._newPObject();
+		return (pBehavior._pBehavior = pBehavior);
+	};
+	
+		
 	var _newBehaviorSnapshotFrom = function (sourceInstance) {
 		var sourceTemplate = sourceInstance.template();
-		var behaviorSnapshot = _newBehavior(sourceTemplate);
-		var sharedPurse = _purseOf(behaviorSnapshot);
+		var sharedPurse = _purseOfNewBehavior(sourceTemplate);
 		sharedPurse._snapshotId = _purseOf(sourceInstance)._snapshotId;
-		_copyMethods(behaviorSnapshot, sourceInstance, sourceTemplate);
-		_attachMethod_newInstance(behaviorSnapshot, sharedPurse);
+		__copyMethods(behaviorSnapshot, sourceInstance, sourceTemplate);
+		__attach_newPObject(sharedPurse);
 		return behaviorSnapshot;
 	};
 	
-	var _deferred_newInstance = function () {
+	var _deferred_newPObject = function () {
 		var behaviorSnapshot = _newBehaviorSnapshotFrom(this);
 		var delegated_newInstance = behaviorSnapshot.newInstance;
-		this.newInstance = delegated_newInstance;// Not sure if should use _putMethod here M3.
+		this.newInstance = delegated_newInstance;
 		return delegated_newInstance();
 	};
 	
 	var _setMethod = function (target, methodName, impFunc) {
-		var behavior = _purseOf(target)._behavior;
+		var pTarget = _purseOf(target);
+		var pBehavior = pTarget._pBehavior;
 		var localMethodCount;
 		
-		if (behavior[methodName] === impFunc) {
-			localMethodCount = _deleteMethod(target, methodName);
-			if (localMethodCount <= 0) {_deleteMethodDictionary(target);}
+		if (pBehavior._methods[methodName] === impFunc) {
+			localMethodCount = __deleteMethod(pTarget, methodName);
+			if (localMethodCount <= 0) {__deleteMethodDictionary(pTarget);}
 			return;
 		}
-		if (target.isTemplate() || target.newInstance === _deferred_newInstance) {
+		if (target.isTemplate() || pTarget._newPObject === _deferred_newPObject) {
 			// target is template or has local methods but no copies yet
 		} else {
 			// target is either adding its first local method, or has already spawned 
 			// a snapshot behavior, and since doing so, is adding a new local method again.
-			target.newInstance = _deferred_newInstance;// Not sure if should use _putMethod here M3.
-			_purseOf(target)._snapshotId = _purseOf(behavior)._snapshotCount += 1;
-			_ensureMethodDictionary(target);
+			pTarget._newPObject = _deferred_newPObject;
+			pTarget._snapshotId = pBehavior._snapshotCount += 1; ???
+			__ensureMethodDictionary(pTarget);
 		}
-		_putMethod(target, methodName, impFunc);
+		__putMethod(pTarget, methodName, impFunc);
 	};	
 
 	var _onUnexpectedConstructorArguments = function (template) {
@@ -146,9 +139,9 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 
 	var _newSafeDualUseConstructor = function (_template, templatePrototype) {
-		var constructor = function CopyFromTemplate(/* arguments */) {
+		var constructor = function CopyFromUsingNewOnTemplate(/* arguments */) {
 			var newInstance;
-			if (this instanceof CopyFromTemplate) {
+			if (this instanceof CopyFromUsingNewOnTemplate) {
 				newInstance = _template.newInstance();
 				newInstance.initFromArgs(arguments);
 				return newInstance;
@@ -174,38 +167,49 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		return (module[templateName] = factoryMethod);
 	};
 
-	var _attachMethod_template = function (_template) {
-		_putMethod(_template, "template", function () {return _template});
+	var _attachMethod_template = function (template) {
+		__putMethod(template, "template", _createConstantAccessor(template););
 	};
 	
 	
-	var attachMethodsFor_instanceId = function (target) {
+	var _initTemplatePurse = function (templatePurse, templateName) {
 		var _instanceCount = 0;
-		target._nextInstanceId = function () {return _instanceCount += 1;};
-		target._instanceCount = function () {return _instanceCount;};
+		var _snapshotCount = 0;
+		templatePurse._nextInstanceId = function () {return _instanceCount += 1;};
+		templatePurse._instanceCount = function () {return _instanceCount;};
+		templatePurse._nextSnapshotId = function () {return _snapshotCount += 1;};
+		templatePurse._snapshotCount = function () {return _snapshotCount;};
+		templatePurse._templateName = templateName;
 	}
 	
 	
 	var _newTemplate = function (sourceInstance, templateName, targetModule) {
+		var pSourceInstance =  _purseOf(sourceInstance);
+		
 		var sourceTemplate = sourceInstance.template();
-		var newTemplatePrototype = _newObject(sourceTemplate);
-		var newTemplate = _newBehavior(newTemplatePrototype);
-		var newPurse = _purseOf(newTemplate);
-		var factoryMethod = _newSafeDualUseConstructor(newTemplate, newTemplatePrototype);
+		var pSourceTemplate = _purseOf(sourceTemplate);
+		var pTargetPrototype = pSourceTemplate._newObject();
+		var newTemplatePurse = _purseOfNewBehavior(pTargetPrototype);
+		var factoryMethod = _newSafeDualUseConstructor(newTemplatePrototype);
+		var newTemplate = newTemplate._public;
 		_attachFactoryMethod(templateName, factoryMethod, targetModule);
 		
-		purse._templateName = templateName;
-		purse._snapshotCount = 0;
-		purse._instanceCount = 0;
+		newTemplatePurse._templateName = templateName;
+		newTemplatePurse._instanceCount = 0;
+		newTemplatePurse._snapshotCount = 0;
 		if (sourceInstance !== sourceTemplate) {
-			_copyMethods(newTemplate, sourceInstance, sourceTemplate);
+			__copyMethods(newTemplatePurse, sourcePurse, pSourceTemplate);
 		}
-		_attachMethod_newInstance(newTemplate, newPurse);
+		__attach_newPObject(newTemplatePurse);
 		_attachMethod_template(newTemplate);
 		return newTemplate;
 	};
  
+	
 	var instance0 = _newTemplate({template: function () {Object.prototype}}, "Clone");
+	
+	///////?????
+	instance0.method("newInstance", function () {});
 	
 	_setMethod(instance0, "method", function (methodName, impFunc) {
 		_setMethod(this, methodName, impFunc);
@@ -247,9 +251,8 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 
 	instance0.method("isIdentical", function (that) {return (this === that);};
 	
-	var _attachMethod_newInstance = function (behavior, behaviorPurse) {
-		_putMethod(behavior, NEW_INSTANCE, behaviorPurse._newInstance);
-	};
+		templatePurse._nextInstanceId = function () {return _instanceCount += 1;};
+
 	
 	instance0.method("copyAsTemplate", function (templateName, targetModule_) {
 		return _newTemplate(this, templateName, targetModule_);

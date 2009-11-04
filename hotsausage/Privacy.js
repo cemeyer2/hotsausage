@@ -79,7 +79,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 				);
 			}
 			purse = _purseOf(receiver);
-			purseOwner = purse._owner;
+			purseOwner = purse._public;
 			if (this !== purseOwner) {
 				return _SabotageHandlers.onImproperPurse(receiver, purseOwner);
 			}
@@ -127,7 +127,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
 		}
 		var	purse = purse_ || _newObject();
-		purse._owner = target;
+		purse._public = target;
 		target._purse = _createProtectedAccessorFor(purse);
 		return purse;
 	};
