@@ -70,42 +70,38 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		__copyMethodDictionary(pSourceInstance, pTarget);
 	};
 
-	var __attach_newPObject = function (pBehavior) {
+	var __attachMethod_newInstance = function (_pBehavior) {
 		var _Purse = function () {};
 		var _Object = function () {};
-		_Purse.prototype = pBehavior; 
-		_Instance.prototype = pBehavior._public; 
-		pBehavior._newPObject = function () {
+		_Purse.prototype = _pBehavior; 
+		_Instance.prototype = _pBehavior._public; 
+		var _pNewObject = function () {
 			return _attachMethod_purse(new _Object(), new _Purse());
-		});
+		};
+		var impFunc = function newInstance(snapshotId_) {
+			var pObject = _pNewObject();
+			pObject._instanceId = _pBehavior._nextInstanceId();
+			return pObject._public;
+		};
+		_pBehavior._pNewObject = _pNewObject;
+		_putMethod(pBehavior, NEW_INSTANCE, impFunc);
 	};
-
-	var _newInstance = function (source) {
-		var pInstance = this._newPObject();
-		pInstance._instanceId = _nextInstanceId(this);
-		return pInstance._public;
-	};
-	
-	var _newPBehavior = function (pSourceTemplate) {
-		var pBehavior = pSourceTemplate._newPObject();
-		return (pBehavior._pBehavior = pBehavior);
-	};
-	
-		
+			
 	var _newBehaviorSnapshotFrom = function (sourceInstance) {
-		var sourceTemplate = sourceInstance.template();
-		var sharedPurse = _purseOfNewBehavior(sourceTemplate);
-		sharedPurse._snapshotId = _purseOf(sourceInstance)._snapshotId;
-		__copyMethods(behaviorSnapshot, sourceInstance, sourceTemplate);
-		__attach_newPObject(sharedPurse);
-		return behaviorSnapshot;
+		var pSourceInstance = _purseOf(sourceInstance);
+		var pTemplate = pSourceInstance._pTemplate;
+		var pBehavior = pTemplate._pNewObject();
+		pBehavior._snapshotId = pSourceInstance._snapshotId;
+		pBehavior._pBehavior = pBehavior;
+		__copyMethods(pBehavior, pSourceInstance, pTemplate);
+		__attachMethod_newInstance(pSnapshot);
+		return pBehavior._public;
 	};
 	
-	var _deferred_newPObject = function () {
+	var _deferred_newInstance = function () {
+		var sourceInstance = this;
 		var behaviorSnapshot = _newBehaviorSnapshotFrom(this);
-		var delegated_newInstance = behaviorSnapshot.newInstance;
-		this.newInstance = delegated_newInstance;
-		return delegated_newInstance();
+		return (this.newInstance = behaviorSnapshot.newInstance)();
 	};
 	
 	var _setMethod = function (target, methodName, impFunc) {
@@ -118,13 +114,13 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 			if (localMethodCount <= 0) {__deleteMethodDictionary(pTarget);}
 			return;
 		}
-		if (target.isTemplate() || pTarget._newPObject === _deferred_newPObject) {
+		if (target.isTemplate() || target.newInstance === _deferred_newInstance) {
 			// target is template or has local methods but no copies yet
 		} else {
 			// target is either adding its first local method, or has already spawned 
 			// a snapshot behavior, and since doing so, is adding a new local method again.
-			pTarget._newPObject = _deferred_newPObject;
-			pTarget._snapshotId = pBehavior._snapshotCount += 1; ???
+			target.newInstance = _deferred_newInstance;
+			pTarget._snapshotId = pBehavior._nextSnapshotId();
 			__ensureMethodDictionary(pTarget);
 		}
 		__putMethod(pTarget, methodName, impFunc);
@@ -166,64 +162,49 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		if (module[templateName]) {return _onNameForTemplateAlreadyAssigned(module, name);}
 		return (module[templateName] = factoryMethod);
 	};
-
-	var _attachMethod_template = function (template) {
-		__putMethod(template, "template", _createConstantAccessor(template););
-	};
 	
-	
-	var _initTemplatePurse = function (templatePurse, templateName) {
+	var __initPTemplate = function (pTemplate, templateName) {
 		var _instanceCount = 0;
 		var _snapshotCount = 0;
-		templatePurse._nextInstanceId = function () {return _instanceCount += 1;};
-		templatePurse._instanceCount = function () {return _instanceCount;};
-		templatePurse._nextSnapshotId = function () {return _snapshotCount += 1;};
-		templatePurse._snapshotCount = function () {return _snapshotCount;};
-		templatePurse._templateName = templateName;
-	}
-	
+		pTemplate._pTemplate = pTemplate;
+		pTemplate._pBehavior = pTemplate;
+		pTemplate._templateName = templateName;
+		pTemplate._nextInstanceId = function () {return _instanceCount += 1;};
+		pTemplate._instanceCount = function () {return _instanceCount;};
+		pTemplate._nextSnapshotId = function () {return _snapshotCount += 1;};
+		pTemplate._snapshotCount = function () {return _snapshotCount;};
+	};
 	
 	var _newTemplate = function (sourceInstance, templateName, targetModule) {
 		var pSourceInstance =  _purseOf(sourceInstance);
+		var pSourceTemplate = pSourceInstance._pTemplate;
+		var sourceTemplate = pSourceTemplate._public;
+		var newTemplatePrototype = _newObject(sourceTemplate);
+		var newTemplate = _newObject(newTemplatePrototype);
+		var pNewTemplate = _attachMethod_purse(newTemplate, _newObject());
 		
-		var sourceTemplate = sourceInstance.template();
-		var pSourceTemplate = _purseOf(sourceTemplate);
-		var pTargetPrototype = pSourceTemplate._newObject();
-		var newTemplatePurse = _purseOfNewBehavior(pTargetPrototype);
-		var factoryMethod = _newSafeDualUseConstructor(newTemplatePrototype);
-		var newTemplate = newTemplate._public;
+		var factoryMethod = _newSafeDualUseConstructor(newTemplate, newTemplatePrototype);
 		_attachFactoryMethod(templateName, factoryMethod, targetModule);
 		
-		newTemplatePurse._templateName = templateName;
-		newTemplatePurse._instanceCount = 0;
-		newTemplatePurse._snapshotCount = 0;
-		if (sourceInstance !== sourceTemplate) {
-			__copyMethods(newTemplatePurse, sourcePurse, pSourceTemplate);
+		__initPTemplate(pNewTemplate);
+		if (pSourceInstance !== pSourceTemplate) {
+			__copyMethods(pNewTemplate, pSourceInstance, pSourceTemplate);
 		}
-		__attach_newPObject(newTemplatePurse);
-		_attachMethod_template(newTemplate);
+		__attachMethod_newInstance(pNewTemplate);
 		return newTemplate;
 	};
- 
-	
+ 	
 	var instance0 = _newTemplate({template: function () {Object.prototype}}, "Clone");
-	
-	///////?????
-	instance0.method("newInstance", function () {});
 	
 	_setMethod(instance0, "method", function (methodName, impFunc) {
 		_setMethod(this, methodName, impFunc);
 	});
-	
-	instance0.method("template", function () {return _purseOf(this)._template;});
-	
-	instance0.method("templateName", function () {return _purseOf(this)._templateName;});
-	
+		
 	instance0.method("isTemplate", function () {return this === this.template();});
 		
 	instance0.method("basicName", function () {
 		var template = this.template();
-		var name = _purseOf(template)._templateName;
+		var name = this.templateName();
 		var purse, instanceId, snapshotId;
 		if (this === template) {return name;}
 		purse = _purseOf(this);
@@ -250,9 +231,6 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	});
 
 	instance0.method("isIdentical", function (that) {return (this === that);};
-	
-		templatePurse._nextInstanceId = function () {return _instanceCount += 1;};
-
 	
 	instance0.method("copyAsTemplate", function (templateName, targetModule_) {
 		return _newTemplate(this, templateName, targetModule_);
