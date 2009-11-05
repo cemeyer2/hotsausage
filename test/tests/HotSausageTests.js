@@ -1,4 +1,4 @@
-describe('HotSausage test suite', function () { 
+// describe('HotSausage test suite', function () { 
 	describe('when HotSausage is loaded', function () {
 		it('HotSausage module should be accessible', function () {
 			expect(HotSausage).toBeDefined();
@@ -30,9 +30,9 @@ describe('HotSausage test suite', function () {
 		it('should be attached', function () {
 			expect()
 		});
-	};)
+	});
 		
-});
+// });
 
 
 /*

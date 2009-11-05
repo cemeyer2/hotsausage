@@ -79,7 +79,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 				);
 			}
 			purse = _purseOf(receiver);
-			purseOwner = purse._public;
+			purseOwner = purse.owner;
 			if (this !== purseOwner) {
 				return _SabotageHandlers.onImproperPurse(receiver, purseOwner);
 			}
@@ -117,17 +117,17 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * attaches a purse to a target
 	 * @function
 	 * @inner
-	 * @name _attachMethod_purse
+	 * @name _attachPurse
 	 * @param {Object} target the object to attach a purse to
 	 * @param {Object} delegatePurse_ is purse of its delegate object
 	 * @return {Object} the purse for the target
 	 */
-	var _attachMethod_purse = function (target, purse_) {
+	var _attachPurse = function (target, purse_) {
+		var	purse = purse_ || _newObject();
 		if (target._purse !== undefined) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
 		}
-		var	purse = purse_ || _newObject();
-		purse._public = target;
+		purse.owner = target;
 		target._purse = _createProtectedAccessorFor(purse);
 		return purse;
 	};
@@ -140,7 +140,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @param {Object} target the object to attach a purse to
 	 * @return {Object} the purse for the target
 	 */
-	Privacy.enableOn = _attachMethod_purse;
+	Privacy.enableOn = _attachPurse;
 	
 	/**
 	 * adds or removes a privileged method from an object
@@ -238,7 +238,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		if (Object.prototype.enablePrivacy) {return false;}
 		if (Object.prototype.privilegedMethod) {return false;}
 		if (Function.prototype.privilegedMethod) {return false;}
-		Object.prototype.enablePrivacy = function () {return _attachMethod_purse(this);};
+		Object.prototype.enablePrivacy = function () {return _attachPurse(this);};
 		Object.prototype.privilegedMethod = function (methodName, func) {
 			_setPrivilegedMethod(this, methodName, func);
 		};

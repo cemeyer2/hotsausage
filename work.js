@@ -125,3 +125,66 @@ function ${1:function_name} (${2:argument}) {
 				// a new newInstance method.
 			};
 
+			var __purseCopyFromTo = function (pSource, pTarget) {
+
+
+
+
+
+				- for the purses, changed _public back to owner
+				- preparing to move Templates info into _hs within _purse
+
+					_setMethod
+
+					__copyMethods
+						_newBehaviorSnapshotFrom
+						_newTemplate
+
+
+				Template
+					_purse
+						_hstd
+							template *
+							name
+							instanceCount
+							snapshotCount
+
+							methods
+							methodCount
+							Purse
+							TemplateData
+							sharedData
+
+						_shared_hstd
+							template
+							behavior
+					newInstance
+
+				Behavior
+					_purse
+						_hstd
+							snapshotId
+							methods
+							methodCount
+							Purse
+							TemplateData
+							sharedData		
+
+						_shared_hstd
+							behavior
+					newInstance
+
+				Instance
+					_purse
+						_hstd
+							instanceId
+
+				Instance
+					_purse
+						_hstd
+							instanceId
+							snapshotId
+							methods
+							methodCount
+					newInstance		
+
