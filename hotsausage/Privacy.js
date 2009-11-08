@@ -12,6 +12,8 @@
  * @requires HotSausage
  */
 
+/*jslint undef: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
+
 HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	var HS = Privacy.module();
 	//returns the targets prototype
@@ -20,6 +22,8 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	var _SabotageHandlers = Privacy;
 	var _ActiveTransporter = _newObject();
 	var _CurrentSlot = _newObject();
+	var _PurseValidation = _newObject();
+	var _TrustedModuleMasterKey = _newObject();
 
 	var FLOOR = Math.floor;
 	var RANDOM = Math.random;
@@ -70,21 +74,26 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 */
 	var _newPrivilegedMethod = function (_behavior, _methodName, _impFunc) {
 		return function privilegedMethod(/* arguments */) {
-			var purse, purseOwner, answer,
-			receiver = this;
+			var purse, purseOwner, answer;
+			var receiver = this;
 			
-			if (_behavior[_methodName] !== privilegedMethod) {
-				return _SabotageHandlers.onImproperMethod(
-					this, _behavior, _methodName, privilegedMethod
-				);
-			}
-			purse = _purseOf(receiver);
-			purseOwner = purse.owner;
-			if (this !== purseOwner) {
-				return _SabotageHandlers.onImproperPurse(receiver, purseOwner);
+			if (receiver._hspv === _PurseValidation) {
+				purse = receiver; 
+				purseOwner = purse.owner;
+			} else {
+				if (! receiver instanceof _behavior) {
+					return _SabotageHandlers.onImproperMethod(
+						this, _behavior, _methodName, privilegedMethod
+					);
+				}
+				purse = _purseOf(receiver);
+				purseOwner = purse.owner;
+				if (receiver !== purseOwner) {
+					return _SabotageHandlers.onImproperPurse(receiver, purseOwner);
+				}
 			}
 			answer = _impFunc.apply(purse, arguments);
-			return (answer === purse) ? receiver : answer;
+			return (answer === purse) ? purseOwner : answer;
 		};
 	};
 
@@ -104,7 +113,9 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	
 
 	var _createProtectedAccessorFor = function (_purse) {
-		return function protectedPurse(sessionKey) {
+		_purse._hspv = _PurseValidation;
+		return function _purse(sessionKey) {
+			if (sessionKey === _TrustedModuleMasterKey) {return _purse;}
 			if (_ActiveTransporter[sessionKey] !== _CurrentSlot) {
 				return _SabotageHandlers.onImproperPurseKey(this, sessionKey);
 			}
@@ -123,7 +134,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @return {Object} the purse for the target
 	 */
 	var _attachPurse = function (target, purse_) {
-		var	purse = purse_ || _newObject();
+		var	purse = purse_ || _newObject(target);
 		if (target._purse !== undefined) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
 		}
