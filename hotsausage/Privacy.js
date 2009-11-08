@@ -23,7 +23,6 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	var _ActiveTransporter = _newObject();
 	var _CurrentSlot = _newObject();
 	var _PurseValidation = _newObject();
-	var _TrustedModuleMasterKey = _newObject();
 
 	var FLOOR = Math.floor;
 	var RANDOM = Math.random;
@@ -115,7 +114,6 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	var _createProtectedAccessorFor = function (_purse) {
 		_purse._hspv = _PurseValidation;
 		return function _purse(sessionKey) {
-			if (sessionKey === _TrustedModuleMasterKey) {return _purse;}
 			if (_ActiveTransporter[sessionKey] !== _CurrentSlot) {
 				return _SabotageHandlers.onImproperPurseKey(this, sessionKey);
 			}
