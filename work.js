@@ -130,61 +130,52 @@ function ${1:function_name} (${2:argument}) {
 
 
 
-
-				- for the purses, changed _public back to owner
-				- preparing to move Templates info into _hs within _purse
-
-					_setMethod
-
-					__copyMethods
-						_newBehaviorSnapshotFrom
-						_newTemplate
-
-
 				Template
 					_purse
-						_hstd
-							template *
-							name
-							instanceCount
-							snapshotCount
-
+						owner
+						_hstd "privateTD"
+							<sharedTD>
+								behaviorTD "privateTD"
+								templateTD "privateTD"
+							Instance
+							TData
 							methods
 							methodCount
-							Purse
-							TemplateData
-							sharedData
-
-						_shared_hstd
-							template
-							behavior
+							basicName
+							instanceCount
+							snapshotCount
+							target
+							templateTD "parent"
+							behaviorTD "parent"
 					newInstance
 
 				Behavior
 					_purse
-						_hstd
-							snapshotId
+						owner
+						_hstd "privateTD"
+							<sharedTD>
+								behaviorTD "privateTD"
+							Instance
+							TData
 							methods
 							methodCount
-							Purse
-							TemplateData
-							sharedData		
-
-						_shared_hstd
-							behavior
+							snapshotId	
+							target
 					newInstance
 
-				Instance
-					_purse
-						_hstd
-							instanceId
 
 				Instance
 					_purse
+						owner
+						_hstd "instanceTD"
+							instanceId
+
+				Instance <extended>
+					_purse
 						_hstd
 							instanceId
-							snapshotId
 							methods
 							methodCount
+							snapshotId
 					newInstance		
 

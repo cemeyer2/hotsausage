@@ -46,7 +46,7 @@
 	 */
 	var _isDefined = function (target) {return typeof target !== UNDEFINED;};
 	
-	var _constantGetterFor = function (_value) {
+	var _createConstantAccessor = function (_value) {
 		return function () {return _value;};
 	};
 	
@@ -264,7 +264,7 @@
 		 */
 		HS.isDefined = _isDefined;
 		
-		HS.constantGetterFor = _constantGetterFor;
+		HS.createConstantAccessor = _createConstantAccessor;
 
 		HS.handleError = _handleError;
 		
