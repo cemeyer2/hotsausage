@@ -44,20 +44,35 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * The only way to get at the purse of a target
 	 * @function
 	 * @inner
-	 * @name _purseOf
+	 * @name __purseOf
 	 * @param {Object} target the target we wish to get the purse of
 	 * @returns {Object} the purse of the target
 	 */
-	var _purseOf = function (target) {
+	var __purseOf = function (target) {
 		var purse;
 		var sessionKey = _newSessionKey();
 		_ActiveTransporter[sessionKey] = _CurrentSlot;
 		target._purse(sessionKey); /// The current transporter slot is written here!
 		purse = _ActiveTransporter[sessionKey];
 		delete _ActiveTransporter[sessionKey];
+		if (purse === _CurrentSlot) {
+			return _SabotageHandlers.onCounterfeitPurse(purse, target);
+		}
+		if (target !== purse.owner) {
+			return _SabotageHandlers.onImproperPurse(purse, target, purse.owner);
+		}
 		return purse;
 		/// NOTE:   _ActiveTransporter is not threadsafe, but is 
 		///			straight forward to be made so when necessary.
+	};
+	
+	var _isPurse = function (target) {
+		return target._hspv === _PurseValidation;
+	};
+	
+	// This function is meant to be used by Template.js if Privacy is enabled on it.
+	var _purseOf = function (target) {
+		return _isPurse(target) ? target : __purseOf(target);
 	};
 
 	/**
@@ -67,32 +82,26 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @function
 	 * @name _newPrivilegedMethod
 	 * @inner
-	 * @param {Object} _behavior the object that this new method will be added to
+	 * @param {Object} _implementor the object that this new method will be added to
 	 * @param {String} _methodName the name of the new privileged method
 	 * @param {Function} _impFunc the implementation of the new privileged method
 	 */
-	var _newPrivilegedMethod = function (_behavior, _methodName, _impFunc) {
+	var _newPrivilegedMethod = function (_implementor, _methodName, _impFunc) {
 		return function privilegedMethod(/* arguments */) {
-			var purse, purseOwner, answer;
-			var receiver = this;
+			var purse, answer;
 			
-			if (receiver._hspv === _PurseValidation) {
-				purse = receiver; 
-				purseOwner = purse.owner;
+			if (_isPurse(this)) {
+				purse = this;
 			} else {
-				if (! receiver instanceof _behavior) {
+				if (! this instanceof _implementor) {
 					return _SabotageHandlers.onImproperMethod(
-						this, _behavior, _methodName, privilegedMethod
+						this, _implementor, _methodName, privilegedMethod
 					);
 				}
-				purse = _purseOf(receiver);
-				purseOwner = purse.owner;
-				if (receiver !== purseOwner) {
-					return _SabotageHandlers.onImproperPurse(receiver, purseOwner);
-				}
+				purse = __purseOf(this);
 			}
 			answer = _impFunc.apply(purse, arguments);
-			return (answer === purse) ? purseOwner : answer;
+			return (answer === purse) ? purse.owner : answer;
 		};
 	};
 
@@ -192,12 +201,21 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @param {Object} actualPurseOwner the actual owner of the purse
 	 * @returns {Object} the target, if errors are set to be handled quietly
 	 */
-	Privacy.onImproperPurse = function (target, actualPurseOwner) {
+	Privacy.onImproperPurse = function (purse, target, actualPurseOwner) {
 		HS.handleError(
 			"ImproperPurse", "Another object's purse has been attached to the target object!"
 		);
-		return target;
+		return null;
 	};
+	
+	
+	Privacy.onCounterfeitPurse = function (purse, target) {
+		HS.handleError(
+			"CounterfeitPurse", "A counterfeit purse is attached to the target object!"
+		);
+		return null;
+	};
+	
 	
 	/**
 	 * causes an error to be thrown when an object purse is attempted to be accessed with an 
@@ -213,7 +231,8 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 */
 	Privacy.onImproperPurseKey = function (target, invalidKey) {
 		HS.handleError(
-			"ImproperPurseKey", "Attempt to access the target's purse using the wrong session key!"
+			"ImproperPurseKey", 
+			"Unauthorized attempt to access the target's purse using the wrong session key!"
 		);
 		return null;
 	};
@@ -268,17 +287,17 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @example 
 	 *
 	 * var Person = function (name, ssn) {
-	 * 		// make this variable private
-	 * 		var purse = HotSausage.Privacy.enableOn();
-	 * 		purse.name = name;
-	 * 		purse.ssn = ssn;
+	 *		// make this variable private
+	 *		var purse = HotSausage.Privacy.enableOn();
+	 *		purse.name = name;
+	 *		purse.ssn = ssn;
 	 * };
 	 * 
 	 * HotSausage.Privacy.privilegedMethodOn(Person, "safeSSN", function () {
-	 * 		var ssn = this.ssn;
-	 * 		var length = ssn.length;
+	 *		var ssn = this.ssn;
+	 *		var length = ssn.length;
 	 *		var lastFour = ssn.slice(length - 5, length - 1);
-	 * 		return lastFour;
+	 *		return lastFour;
 	 * });
 	 *
 	 * var joe = new Person("Joe", "123-45-6789");
@@ -289,17 +308,17 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * HotSausage.Privacy.installCoreMethods();
 	 *
 	 * var Person = function (name, ssn) {
-	 * 		// make this variable private
-	 * 		var purse = this.enablePrivacy();
-	 * 		purse.name = name;
-	* 		purse.ssn = ssn;
+	 *		// make this variable private
+	 *		var purse = this.enablePrivacy();
+	 *		purse.name = name;
+	 *		purse.ssn = ssn;
 	 * };
 	 * 
 	 * Person.privilegedMethod("safeSSN", function () {
-	 * 		var ssn = this.ssn;
-	 * 		var length = ssn.length;
+	 *		var ssn = this.ssn;
+	 *		var length = ssn.length;
 	 *		var lastFour = ssn.slice(length - 5, length - 1);
-	 * 		return lastFour;
+	 *		return lastFour;
 	 * });
 	 *
 	 * var joe = new Person("Joe", "123-45-6789");
@@ -310,6 +329,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	/**
 	 * locks down this module by removing several methods: HotSausage.Privacy.privilegedMethodOn, 
 	 * HotSausage.Privacy.onImproperMethod, HotSausage.Privacy.onImproperPurse, 
+	 * HotSausage.Privacy.onCounterfeitPurse, 
 	 * HotSausage.Privacy.onImproperPurseKey, HotSausage.Privacy.onPurseAlreadyPresent,
 	 * Object.prototype.privilegedMethod, Function.prototype.privilegedMethod
 	 * @function
@@ -321,6 +341,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		_SabotageHandlers = {
 			onImproperMethod: Privacy.onImproperMethod,
 			onImproperPurse: Privacy.onImproperPurse,
+			onCounterfeitPurse: Privacy.onCounterfeitPurse,
 			onImproperPurseKey: Privacy.onImproperPurseKey,
 			onPurseAlreadyPresent: Privacy.onPurseAlreadyPresent
 		};
@@ -328,6 +349,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		delete Privacy.privilegedMethodOn;
 		delete Privacy.onImproperMethod;
 		delete Privacy.onImproperPurse;
+		delete Privacy.onCounterfeitPurse;
 		delete Privacy.onImproperPurseKey;
 		delete Privacy.onPurseAlreadyPresent;
 		if (_Privacy_HS.coreMethodsEnabled) {

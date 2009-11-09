@@ -10,17 +10,17 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	var _dontOverwriteExistingTemplates = true;
 	var NEW_INSTANCE = "newInstance";
 	
-	var _createPurseAccessor = HS.createConstantAccessor;  
+	var _createPurseAccessor = function directPropertyAccess(purse) {return purse;};
 	// HS.Privacy should replace this method with the following
 	// var _createPurseAccessor = HS.Privacy._createProtectedAccessorFor;
 	
-	var _purseOf = function (target) {return target._purse();};
+	var _purseOf = function (target) {return target._purse;};
 	// HS.Privacy should replace this method with the following
-	// var _purseOf = function (target) {return target._purse(_TrustedModuleKey);};
+	// var _purseOf = HS.Privacy._purseOf(target);
 	
-	var __putMethod = function (target, targetBD, methodName, impFunc) {
-		target[methodName] = impFunc;
-		targetBD.methods[methodName] = impFunc;
+	var __putMethod = function (target, targetBD, methodName, method) {
+		target[methodName] = method;
+		targetBD.methods[methodName] = method;
 		return (targetBD.methodCount += 1);
 	};
 
@@ -70,17 +70,9 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		var templateBD = instanceBD.templateBD;
 		instanceBD.snapshotId = (templateBD.snapshotCount += 1);
 	};
-	
-	var _template = function (target) {
-		return _purseOf(target)._hsbd.template;
-	};
-
-	var _isTemplate = function (target) {
-		return (target === _template(target));
-	};
-	
+			
 	var __attachPurse = function (target, targetBD) {
-		var purse = _newObject();
+		var purse = _newObject(target);
 		purse.owner = target;
 		purse._hsbd = targetBD;
 		target._purse = _createPurseAccessor(purse);
@@ -134,18 +126,45 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		this.newInstance = behaviorSnapshot.newInstance;
 		return deferred_newInstance();
 	};
-		
-	var _setMethod = function (target, methodName, impFunc) {
+	
+	var _hasIdenticalImplementation = function (method, impFunc, isDelegatingMethod_) {
+		if (method == impFunc) {return true;}  // Intentionally used == instead of ===
+		if (isDelegatingMethod_) {
+			return _purseOf(method).implementation === impFunc;
+		}
+		return false;
+	};
+	
+	var _newDelegatingMethod = function (implementor, name, _impFunc) {
+		return function delegatingMethod(/* arguments */) {
+			var purse = _purseOf(this);
+			var answer = _impFunc.apply(purse, arguments);
+			return (answer === purse) ? purse.owner : answer;
+		};
+	};
+	// HS.Privacy should replace this method with the following
+	// var _newDelegatingMethod = HS.Privacy._newPrivilegedMethod
+	// Note: the method's signature contains three args (even though only one is necessary)
+	// to match the method signature of HS.Privacy._newPrivilegedMethod
+	
+	var _asDelegatingMethod = function (implementor, name, impFunc) {
+		var method = _newDelegatingMethod(implementor, name, impFunc);
+		var purse = __attachPurse(method, null);
+		purse.implementation = impFunc;
+		return method;
+	};
+	
+	var _setMethod = function (target, methodName, impFunc, isDelegating_) {
 		var targetBD = _purseOf(target)._hsbd;
 		var delegateBD = targetBD.delegateBD;
-		var localMethodCount;
+		var localMethodCount, method;
 		
-		if (delegateBD.methods[methodName] === impFunc) {
+		if (_hasIdenticalImplementation(delegateBD.methods[methodName], impFunc, isDelegating_)) {
 			localMethodCount = __deleteMethod(target, targetBD, methodName);
 			if (localMethodCount <= 0) {__deleteMethodDictionary(targetBD);}
 			return;
 		}
-		if (_isTemplate(target) || target.newInstance === _deferred_newInstance) {
+		if (targetBD.templateBD === targetBD || target.newInstance === _deferred_newInstance) {
 			// target is template or has local methods but no copies yet
 		} else {
 			// target is either adding its first local method, or has already spawned 
@@ -154,7 +173,8 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 			__ensureMethodDictionary(targetBD);
 			__setSnapshotId(targetBD);
 		}
-		__putMethod(target, targetBD, methodName, impFunc);
+		method = isDelegating_ ? _asDelegatingMethod(target, methodName, impFunc) : impFunc;
+		__putMethod(target, targetBD, methodName, method);
 	};	
 
 	var _onUnexpectedConstructorArguments = function (template) {
@@ -170,7 +190,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 			var newInstance;
 			if (this instanceof CopyFromUsingNewOnTemplate) {
 				newInstance = _template.newInstance();
-				newInstance.initFromArgs(arguments);
+				_template.initFromArgs.apply(newInstance, arguments);
 				return newInstance;
 			}
 			if (arguments.length > 0) {return _onUnexpectedConstructorArguments(_template);}
@@ -228,7 +248,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		return template;
 	};
 	
-	var __basicName = function (targetBD) {
+	var __bdBasicName = function (targetBD) {
 		var templateBD = targetBD.templateBD;
 		var name = templateBD.basicName;
 		var instanceId, snapshotId, snapshotText;
@@ -241,16 +261,9 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 
 	var _basicName = function (target) {
-		return __basicName(_purseOf(target)._hsbd);
+		return __bdBasicName(_purseOf(target)._hsbd);
 	};
 	
-	var _name = function (target) {
-		var purse = _purseOf(target);
-		var name = purse.name;
-		if (name) {return name;}
-		return __basicName(purse._hsbd);
-	};
-
 	var _copyPurseFromTo = function (sourceInstance, targetInstance) {
 		var sourcePurse = _purseOf(sourceInstance);
 		var targetPurse = _purseOf(targetInstance);
@@ -262,29 +275,37 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		}
 	};
 	
-	var _hasSameStateAs = function (a, b) {
-		var purseA = _purseOf(a);
-		var purseB = _purseOf(b);
-		var localPropertiesOfA = _newObject();
+	var _hasSameStateAs = function (instanceA, instanceB) {
+		var purseA = _purseOf(instanceA);
+		var purseB = _purseOf(instanceB);
+		var localStateA = _newObject();
 		var propertyName;
 		for (propertyName in purseA) {
 			if (_hasLocalProperty(purseA, propertyName) && _isPublic(propertyName)) {
-				localPropertiesOfA[propertyName] = purseA[propertyName];
+				localStateA[propertyName] = purseA[propertyName];
 			}
 		}
 		for (propertyName in purseB) {
 			if (_hasLocalProperty(purseB, propertyName) && _isPublic(propertyName)) {
-				if (purseB[propertyName] !== localPropertiesOfA[propertyName]) {return false;}
-				delete localPropertiesOfA[propertyName];
+				if (purseB[propertyName] !== localStateA[propertyName]) {return false;}
+				delete localStateA[propertyName];
 			}
 		}
-		for (propertyName in localPropertiesOfA) {
-			if (localPropertiesOfA[propertyName] !== undefined) {return false;}
+		for (propertyName in localStateA) {
+			if (localStateA[propertyName] !== undefined) {return false;}
 		}
 		return true;
 	};
 	
-	
+	var _template = function (target) {
+		return _purseOf(target)._hsbd.template;
+	};
+
+	var _isTemplate = function (target) {
+		var targetBD = _purseOf(target)._hsbd;
+		return targetBD.templateBD === targetBD;
+	};
+
 	var templateInstance0 = (function bootstrap() {
 		var bootstrapInstance = _newObject();
 		var bootstrapBD = __newBehavioralData(Object.prototype, null);
@@ -298,61 +319,85 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		//    __attachMethod_newInstance(), __copyMethods()
 		//    snapshotId, delegateBD, instanceCount, snapshotCount
 		bootstrapBD.name = function () {
-			return __basicName(this) + "-BD";
+			return __bdBasicName(this) + "-BD";
 		};
 		return _newTemplate(bootstrapInstance, "Clone");
 	})();
 	
+	_setMethod(templateInstance0, "basicMethod", function (methodName, impFunc) {
+		_setMethod(this, methodName, impFunc, false);
+	});
+
 	_setMethod(templateInstance0, "method", function (methodName, impFunc) {
-		_setMethod(this, methodName, impFunc);
+		_setMethod(this, methodName, impFunc, true);
 	});
 		
-	templateInstance0.method("isTemplate", function () {return _isTemplate(this);});
+	templateInstance0.basicMethod("template", function () {return _template(this);});
 		
-	templateInstance0.method("basicName", function () {return _basicName(this);});
+	templateInstance0.basicMethod("isTemplate", function () {return _isTemplate(this);});
 
-	templateInstance0.method("name", function () {
-		// This method can be overridden.
-		return _name(this);
-	});
-	
-	templateInstance0.method("isSameTypeAs", function (that) {
+	templateInstance0.basicMethod("isIdentical", function (that) {return (this === that);});
+
+	templateInstance0.basicMethod("isSameTypeAs", function (that) {
 		if (this === that) {return true;}
-		return (this.template() === that.template());
+		return this.type() === that.type();
+		// return (this.template() === that.template());
 	});
 
-	templateInstance0.method("hasIdenticalBehaviorAs", function (that) {
-		if (this === that) {return true;}
+	templateInstance0.basicMethod("hasIdenticalBehaviorAs", function (that) {
+		// if (this === that) {return true;}
 		return (this.newInstance === that.newInstance);
 	});
 
-	templateInstance0.method("hasSameBehaviorAs", function (that) {
+	templateInstance0.basicMethod("hasSameBehaviorAs", function (that) {
 		// This method can be overridden.
 		return this.hasIdenticalBehaviorAs(that);
 	});
 
-	templateInstance0.method("isIdentical", function (that) {return (this === that);});
-	
-	templateInstance0.method("copyAsTemplate", function (templateName, targetModule_) {
-		return _newTemplate(this, templateName, targetModule_);
-	});
-	
-	templateInstance0.method("initFromArgs", function (argumentsObject) {
-		// Reimplement this method to initialize a new blank instance copy.
-	});
-		
-	templateInstance0.method("isEqual", function (that) {
-		// This method SHOULD be overridden.
-		// return this.isIdentical(that);
+	templateInstance0.basicMethod("isSameAs", function (that) {
+		if (this === that) {return true;}
 		return (this.hasSameBehaviorAs(that) && _hasSameStateAs(this, that));
 	});
 	
-	templateInstance0.method("blankCopy", templateInstance0.newInstance);
+	templateInstance0.basicMethod("blankCopy", templateInstance0.newInstance);
 	
+	templateInstance0.basicMethod("copyAsTemplate", function (templateName, targetModule_) {
+		return _newTemplate(this, templateName, targetModule_);
+	});
+	
+	templateInstance0.basicMethod("basicName", function () {return _basicName(this);});
+	
+	templateInstance0.basicMethod("basicType", templateInstance0.basicName);
+	
+	templateInstance0.method("name", function () {
+		var name = this.name;
+		return name ? name : this.basicName();
+	});
+
+	templateInstance0.method("setName", function (name) {this.name = name;});
+	
+	templateInstance0.method("type", function () {
+		// This method can be overridden.
+		var type = this.type;
+		return type ? type : this.basicType();
+	});
+
+	templateInstance0.method("setName", function (type) {this.type = type;});	
+	
+	templateInstance0.method("isEqual", function (that) {
+		// One SHOULD CONSIDER overriding this method.
+		// return this.isIdentical(that);
+		return this.isSameAs(that);
+	});
+
 	templateInstance0.method("copy", function () {
-		// This method SHOULD be overridden.
+		// One SHOULD CONSIDER overriding this method.
 		var newInstance = this.newInstance();
 		_copyPurseFromTo(this. newInstance);
 		return newInstance;
 	});	
+	
+	templateInstance0.method("initFromArgs", function (/* optional args */) {
+		// One SHOULD REIMPLEMENT this method to initialize a new blank instance copy.
+	});
 });

@@ -38,8 +38,8 @@
 /*
 Modules that should work with any new module not just HS
 
-		this.name = _constantGetterFor(name);
-		this.module = _constantGetterFor(parent);
+		this.name = _createConstantAccessor(name);
+		this.module = _createConstantAccessor(parent);
 		this.currentSubmodules = function () {return _submodules.slice(0);}
 		this.submodulesDo = function (action) {_submodules.forEach(action);}
 		this.newSubmodule = function (submoduleName, setupAction_) {
@@ -50,7 +50,7 @@ Modules that should work with any new module not just HS
 
 
 		HS.isDefined = _isDefined;
-		HS.constantGetterFor = _constantGetterFor;
+		HS.constantGetterFor = _createConstantAccessor;
 		HS.handleError = _handleError;
 		HS.methodOn = _setMethod;
 		HS.isModule = function (target_) {

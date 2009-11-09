@@ -6,6 +6,9 @@
  * @author Maurice Rabb
  * @author Charlie Meyer
  */
+
+/*jslint undef: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
+
 (function () {
 	var UNDEFINED = 'undefined';
 	var STRING = 'string';
@@ -77,7 +80,7 @@
 		return (target[name] = moduleAction());
 	};
 
-	var _newModule, _Module;
+	var Module, _newModule;
 
 	/**
 	 * creates a new module
@@ -95,10 +98,10 @@
 			// create a new purse for the submodule, 
 			// using the purse of the parent object as its prototype.
 			var hierarchicalPurse = _newObject(_parentPurse);
-			var module = new _Module(_parentModule, _name, hierarchicalPurse);
+			var module = new Module(_parentModule, _name, hierarchicalPurse);
 			hierarchicalPurse.sharedPurse = _parentPurse;
 			hierarchicalPurse.module = module;
-			_setupAction_ && _setupAction_(module, hierarchicalPurse);
+			if (_setupAction_) {_setupAction_(module, hierarchicalPurse);}
 			return module;
 		});
 	};
@@ -111,7 +114,7 @@
 	 * @param {String} name the name of the new module
 	 * @param {Object} purse the purse of the new module
 	 */
-	_Module = function (parent, name, _hierarchicalPurse) {
+	Module = function (parent, name, _hierarchicalPurse) {
 		var _submodules = [];
 		
 		/**
@@ -119,16 +122,16 @@
 		 * @function
 		 * @return {String} the name of the module
 		 */
-		this.name = _constantGetterFor(name);
+		this.name = _createConstantAccessor(name);
 		
-		this.module = _constantGetterFor(parent);
+		this.module = _createConstantAccessor(parent);
 		
 		/**
 		 * returns all current submodules of this module
 		 * @function
 		 * @returns {Array} an array of submodules
 		 */
-		this.currentSubmodules = function () {return _submodules.slice(0);}
+		this.currentSubmodules = function () {return _submodules.slice(0);};
 		
 		/**
 		 * executes an action on each submodule of this module
@@ -142,7 +145,7 @@
 		 * @param {Function} action a function that takes a single parameter, a submodule object,
 		 * and executes some action on that submodule
 		 */
-		this.submodulesDo = function (action) {_submodules.forEach(action);}
+		this.submodulesDo = function (action) {_submodules.forEach(action);};
 		
 		/**
 		 * adds a new submodule to this module. this module is set as the parent
@@ -165,7 +168,7 @@
 	 * @param {Function} action the action to execute, should take one
 	 * parameter, the module that is being acted upon
 	 */
-	_Module.prototype.withAllSubmodulesDo = function (action) {
+	Module.prototype.withAllSubmodulesDo = function (action) {
 		action(this);
 		this.allSubmodulesDo(action);
 	};
@@ -175,20 +178,20 @@
 	 * @param {Function} action the action to execute, should take one
 	 * parameter, the module that is being acted upon
 	 */
-	_Module.prototype.allSubmodulesDo = function (_action) {
+	Module.prototype.allSubmodulesDo = function (_action) {
 		this.submodulesDo(function (submodule) {
 			submodule.withAllSubmodulesDo(_action);
 		});
 	};
 
-	_Module.prototype.isModule = function () {return true;};
+	Module.prototype.isModule = function () {return true;};
 
-	_Module.prototype.renameAs = function (_newName) {
+	Module.prototype.renameAs = function (_newName) {
 		var _target = this;
 		var _deprecatedName = _target.name();
 		var _parentModule = _target.module();
 		return _attachResultingModule(_parentModule, _newName, function () {
-			_target.name = _constantGetterFor(_newName);
+			_target.name = _createConstantAccessor(_newName);
 			delete _parentModule[_deprecatedName];
 			return _target;
 		});
@@ -199,7 +202,7 @@
 	/**
 	 * @namespace HotSausage
 	 * @name HotSausage
-	 * @augments _Module
+	 * @augments Module
 	 */
 	_newModule(this, null, "HotSausage", function (HS, _HS) {
 		/**
@@ -248,8 +251,8 @@
 		_HS.delegateOf = function (target) {
 			// Alternate ways to access the target's prototype (aka delegate):
 					return target.__proto__;
-			// 		return target.constructor.prototype;
-			// 		return Object.getPrototypeOf(target);
+			//		return target.constructor.prototype;
+			//		return Object.getPrototypeOf(target);
 		};
 		
 		//I tried using @borrows here, it wouldnt work for some reason, so copy/pasting comments instead
@@ -286,8 +289,8 @@
 		HS.methodOn = _setMethod;
 		
 		HS.isModule = function (target_) {
-			if (target_ === undefined) {return true;} // Just like normal _Module.isModule
-			return (target_ instanceof _Module);
+			if (target_ === undefined) {return true;} // Just like normal Module.isModule
+			return (target_ instanceof Module);
 		};
 		
 		/**
