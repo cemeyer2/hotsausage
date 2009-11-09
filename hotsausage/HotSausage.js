@@ -1,3 +1,6 @@
+
+
+
 "use strict";
 
 /**
@@ -80,42 +83,20 @@
 		return (target[name] = moduleAction());
 	};
 
-	var Module, _newModule;
-
-	/**
-	 * creates a new module
-	 * @function
-	 * @inner
-	 * @param {Object} parent the parent of the new module to be created
-	 * @param {Object} parentPurse the purse of the parent of the new module
-	 * @param {String} name the name of the module
-	 * @param {Function} setupAction_ the optional implementation function for the new module
-	 * that takes 2 parameters, the module object and the purse for that module (in that order)
-	 * @returns {Object} the created module
-	 */
-	_newModule = function (_parentModule, _parentPurse, _name, _setupAction_) {
-		return _attachResultingModule(_parentModule, _name, function () {
-			// create a new purse for the submodule, 
-			// using the purse of the parent object as its prototype.
-			var hierarchicalPurse = _newObject(_parentPurse);
-			var module = new Module(_parentModule, _name, hierarchicalPurse);
-			hierarchicalPurse.sharedPurse = _parentPurse;
-			hierarchicalPurse.module = module;
-			if (_setupAction_) {_setupAction_(module, hierarchicalPurse);}
-			return module;
-		});
-	};
-
 	/**
 	 * Creates an empty module with basic functionality. The purse's module
 	 * attribute is set to a reference to this object when the construction
 	 * of the object is finished.
 	 * @constructor
 	 * @param {String} name the name of the new module
-	 * @param {Object} purse the purse of the new module
+	 * @param {Object} the parent module the new module
+	 * @param {Object} the parent purse of the new module
 	 */
-	Module = function (parent, name, _hierarchicalPurse) {
+	var _HSModule = function (name, parent, parentPurse) {
 		var _submodules = [];
+		var _hierarchicalPurse = _newObject(parentPurse);
+		_hierarchicalPurse.sharedPurse = parentPurse;
+		_hierarchicalPurse.module = this;
 		
 		/**
 		 * returns the name of the module
@@ -148,17 +129,27 @@
 		this.submodulesDo = function (action) {_submodules.forEach(action);};
 		
 		/**
+		 * gives controlled access to the hierarchical purse of the module.
+		 * @function
+		 * @param {Function} extendAction take two parameters, the module itself 
+		 * and the purse for the module
+		 */		
+		this.extend = function (extendAction) {extendAction(this, _hierarchicalPurse);};
+
+		/**
 		 * adds a new submodule to this module. this module is set as the parent
 		 * of the new submodule and this module's purse's prototype is set as
 		 * the prototype for the new submodule's purse
 		 * @function
 		 * @param {String} submoduleName the name of the submodule to create
-		 * @param {Function} setupAction_ the optional implementation function for the new module
-		 * that takes 2 parameters, the module object and the purse for that module (in that order)
 		 */
-		this.newSubmodule = function (submoduleName, setupAction_) {
-			var submodule = _newModule(this, _hierarchicalPurse, submoduleName, setupAction_);
-			if (submodule) {_submodules.push(submodule);}
+		this.newSubmodule = function (_submoduleName, _setupAction_) {
+			return _attachResultingModule(this, _submoduleName, function () {
+				var submodule = new _HSModule(_submoduleName, this, _hierarchicalPurse);
+				_submodules.push(submodule);
+				if (_setupAction_) {this.extend(_setupAction_);}
+				return submodule;
+			});
 		};
 	};	
 
@@ -168,7 +159,7 @@
 	 * @param {Function} action the action to execute, should take one
 	 * parameter, the module that is being acted upon
 	 */
-	Module.prototype.withAllSubmodulesDo = function (action) {
+	_HSModule.prototype.withAllSubmodulesDo = function (action) {
 		action(this);
 		this.allSubmodulesDo(action);
 	};
@@ -178,22 +169,21 @@
 	 * @param {Function} action the action to execute, should take one
 	 * parameter, the module that is being acted upon
 	 */
-	Module.prototype.allSubmodulesDo = function (_action) {
+	_HSModule.prototype.allSubmodulesDo = function (_action) {
 		this.submodulesDo(function (submodule) {
 			submodule.withAllSubmodulesDo(_action);
 		});
 	};
 
-	Module.prototype.isModule = function () {return true;};
+	_HSModule.prototype.isModule = function () {return true;};
 
-	Module.prototype.renameAs = function (_newName) {
-		var _target = this;
-		var _deprecatedName = _target.name();
-		var _parentModule = _target.module();
+	_HSModule.prototype.renameAs = function (_newName) {
+		var _submodule = this;
+		var _parentModule = _submodule.module();
 		return _attachResultingModule(_parentModule, _newName, function () {
-			_target.name = _createConstantAccessor(_newName);
-			delete _parentModule[_deprecatedName];
-			return _target;
+			delete _parentModule[_submodule.name];
+			_submodule.name = _createConstantAccessor(_newName);
+			return _submodule;
 		});
 	};
 		
@@ -202,9 +192,9 @@
 	/**
 	 * @namespace HotSausage
 	 * @name HotSausage
-	 * @augments Module
+	 * @augments _HSModule
 	 */
-	_newModule(this, null, "HotSausage", function (HS, _HS) {
+	(new _HSModule("HotSausage", this, null)).extend(function (HS, _HS) {
 		/**
 		 * adds a new method to an object if the implementation function is
 		 * supplied, if it is not, then the method is removed from the
@@ -366,13 +356,14 @@
 		HS.respectsCore = function () {return !_HS.coreMethodsEnabled;};
 		
 		/**
-		 * installs core methods, namely Object.method and Function.method. If Object.method is already defined,
-		 * then this will cause this function to return false, otherwise it will return true. Both methods will take
-		 * 2 parameters, the name of the method to install as a string and a function as its implementation.
-		 * These are defined to both be the same implementation as HotSausage#methodOn, except that for Object.methodOn
-		 * the behavior is a reference to this whereas for Function.method, the behavior is a reference to this.prototype.
-		 * Once this function is complete, the function named "installCoreMethods" will be run on all submodules registered
-		 * to this module.
+		 * installs core methods, namely Object.method and Function.method. If Object.method is 
+		 * already defined, then this will cause this function to return false, otherwise it will 
+		 * return true. Both methods will take 2 parameters, the name of the method to install as 
+		 * a string and a function as its implementation. These are defined to both be the same 
+		 * implementation as HotSausage#methodOn, except that for Object.methodOn the behavior is 
+		 * a reference to this whereas for Function.method, the behavior is a reference to 
+		 * this.prototype. Once this function is complete, the function named "installCoreMethods" 
+		 * will be run on all submodules registered to this module.
 		 * @function
 		 * @name installCoreMethods
 		 * @memberOf HotSausage
