@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>MDPnP Javascript Testbed</title>
+		<title>HotSausage Javascript Testbed</title>
 		
 		<style type="text/css">
   		.spec {
@@ -30,23 +30,59 @@
 		<script src="jasmine/lib/TrivialReporter.js"></script>
 		
 		<!--Libraries-->
-		<!--script src="../lib/json_parse.js"></script>
-		
-		<!--Hot Sausage-->
-		<script src="../hotsausage/HotSausage.js"></script>
-		
-		<!--Tests-->
-		<script src="tests/HotSausageTests.js"></script>
-		
+		<!--script src="../lib/json_parse.js"></script>-->
+				
 	</head>
 	<body>
+		<div id="scripts"></div>
+		<select id="whichTests">
+			<option value="ind">Individual Files</option>
+			<option value="full">Full File</option>
+			<option value="min">Minified File</option>
+		</select>
+		
+		<input type="button" id="run" value="Run Tests"></input>
 		
 		<script language="JavaScript">
-			//var testsToRun = prompt("Path to js file defining specs?");
-			//jasmine.include(testsToRun);
-			var jasmineEnv = jasmine.getEnv();
-  			jasmineEnv.reporter = new jasmine.TrivialReporter();
-  			jasmineEnv.execute();
+
+			//modify these as needed
+			var ind = ["../hotsausage/HotSausage.js", "../hotsausage/Privacy.js"];
+			var full = ["../build/HotSausage_full.js"];
+			var min  = ["../build/HotSausage_full-min.js"];
+			//modify this as needed
+			var tests = ["tests/HotSausageTests.js"];
+			
+			var runTests = function (src) {
+				var i;
+				//doing this since jasmine.include doesnt work on local files
+				var include = function (loc) {
+					var scriptTag = document.createElement("script");
+					scriptTag.src = loc;
+					document.getElementById("scripts").appendChild(scriptTag);
+				};
+
+				for(i = 0; i < src.length; i = i+1) {
+					include(src[i]);
+				}
+				for(i = 0; i < tests.length; i = i+1) {
+					include(tests[i]);
+				}
+				var jasmineEnv = jasmine.getEnv();
+	  			jasmineEnv.reporter = new jasmine.TrivialReporter();
+	  			jasmineEnv.execute();	
+			};
+
+			//add click handler to button
+			document.getElementById("run").onclick = function () {
+				var type = document.getElementById("whichTests").value;
+				if(type == "ind") {
+					runTests(ind);
+				} else if(type == "full") {
+					runTests(full);
+				} else if(type == "min") {
+					runTests(min);
+				}
+			};
 		</script>
 	</body>
 </html>
