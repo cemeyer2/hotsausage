@@ -24,11 +24,11 @@
 			mine = Mine;
 			hierarchicalPurse = _HierarchicalPurse;
 			it('should be attached', function () {
-				expect()
+				expect();
 			});
 		});
 		it('should be attached', function () {
-			expect()
+			expect();
 		});
 	});
 		
