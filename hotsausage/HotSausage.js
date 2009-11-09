@@ -16,6 +16,7 @@
 	var UNDEFINED = 'undefined';
 	var STRING = 'string';
 	var BOOLEAN = 'boolean';
+	var NUMBER = 'number'
 	var HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
 	
 	// the purse
@@ -83,6 +84,27 @@
 		return (target[name] = moduleAction());
 	};
 
+	var _HSModule, _newModule;
+	
+	/**
+	 * creates a new module
+	 * @function
+	 * @inner
+	 * @param {String} name the name of the module
+	 * @param {Object} parent the parent of the new module to be created
+	 * @param {Object} parentPurse the purse of the parent of the new module
+	 * @param {Function} setupAction_ the optional implementation function for the new module
+	 * that takes 2 parameters, the module object and the purse for that module (in that order)
+	 * @returns {Object} the created module
+	 */
+	_newModule = function (_name, _parentModule, _parentPurse, _setupAction_) {
+		return _attachResultingModule(_parentModule, _name, function () {
+			var submodule = new _HSModule(_name, _parentModule, _parentPurse);
+			if (_setupAction_) {submodule.extend(_setupAction_);}
+			return submodule;
+		});
+	};	
+	
 	/**
 	 * Creates an empty module with basic functionality. The purse's module
 	 * attribute is set to a reference to this object when the construction
@@ -92,7 +114,7 @@
 	 * @param {Object} the parent module the new module
 	 * @param {Object} the parent purse of the new module
 	 */
-	var _HSModule = function (name, parent, parentPurse) {
+	_HSModule = function (name, parent, parentPurse) {
 		var _submodules = [];
 		var _hierarchicalPurse = _newObject(parentPurse);
 		_hierarchicalPurse.sharedPurse = parentPurse;
@@ -143,13 +165,9 @@
 		 * @function
 		 * @param {String} submoduleName the name of the submodule to create
 		 */
-		this.newSubmodule = function (_submoduleName, _setupAction_) {
-			return _attachResultingModule(this, _submoduleName, function () {
-				var submodule = new _HSModule(_submoduleName, this, _hierarchicalPurse);
-				_submodules.push(submodule);
-				if (_setupAction_) {this.extend(_setupAction_);}
-				return submodule;
-			});
+		this.newSubmodule = function (submoduleName, setupAction_) {
+			var submodule = _newModule(submoduleName, this, _hierarchicalPurse, setupAction_);
+			if (submodule) {_submodules.push(submodule);}
 		};
 	};	
 
@@ -194,7 +212,7 @@
 	 * @name HotSausage
 	 * @augments _HSModule
 	 */
-	(new _HSModule("HotSausage", this, null)).extend(function (HS, _HS) {
+	_newModule("HotSausage", this, null, function (HS, _HS) {
 		/**
 		 * adds a new method to an object if the implementation function is
 		 * supplied, if it is not, then the method is removed from the
@@ -312,6 +330,16 @@
 		 * @returns {Boolean} true if the object is a boolean, false otherwise
 		 */
 		HS.isBoolean = function (target) {return typeof target === BOOLEAN;};
+
+		/**
+		 * returns whether or not an object is a string
+		 * @function
+		 * @name isNumber
+		 * @memberOf HotSausage
+		 * @param {Object} target the target to check
+		 * @returns {Boolean} true if the object is a number, false otherwise
+		 */
+		HS.isNumber = function (target) {return typeof target === NUMBER;};
 		
 		/**
 		 * returns whether or not an object is a string
