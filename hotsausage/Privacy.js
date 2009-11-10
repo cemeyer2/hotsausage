@@ -142,7 +142,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @return {Object} the purse for the target
 	 */
 	var _attachPurse = function (target, purse_) {
-		var	purse = purse_ || _handleError(target);
+		var	purse = purse_ || _newObject(target);
 		if (target._purse !== undefined) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
 		}
