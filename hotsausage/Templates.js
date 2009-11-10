@@ -3,10 +3,12 @@
 /*jslint undef: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
 
 HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
-	var HS = Templates.module();
+	// var HS = Templates.module();
 	var _newObject = _Templates_HS.newObject;
 	var _hasLocalProperty = _Templates_HS.hasLocalProperty;
-	var _isPublic = HS.isPublic;
+	var _isPublic = _Templates_HS.isPublic;
+	var _handleError = _Templates_HS.handleError;
+	
 	var _dontOverwriteExistingTemplates = true;
 	var NEW_INSTANCE = "newInstance";
 	
@@ -178,7 +180,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};	
 
 	var _onUnexpectedConstructorArguments = function (template) {
-		HS.handleError(
+		_handleError(
 			"UnexpectedConstructorArguments", 
 			"No arguments expected to simply return the " + template.name() + " template object!"
 		);
@@ -201,7 +203,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 
 	var _onNameForTemplateAlreadyAssigned = function (module, name) {
-		HS.handleError(
+		_handleError(
 			"CannotCreateTemplateName",
 			"Property " + name + "already defined in " + module.toString()
 		);
@@ -331,7 +333,11 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	_setMethod(templateInstance0, "method", function (methodName, impFunc) {
 		_setMethod(this, methodName, impFunc, true);
 	});
-		
+	
+	templateInstance0.basicMethod("removeMethod", function (methodName) {
+		_setMethod(this, methodName, null);
+	});
+	
 	templateInstance0.basicMethod("template", function () {return _template(this);});
 		
 	templateInstance0.basicMethod("isTemplate", function () {return _isTemplate(this);});

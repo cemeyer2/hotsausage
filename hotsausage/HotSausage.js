@@ -1,14 +1,11 @@
-
-
-
-"use strict";
-
 /**
  * HotSausage JavaScript Framework
  * @fileOverview this file sets up the HotSausage JavaScript Framework
  * @author Maurice Rabb
  * @author Charlie Meyer
  */
+
+"use strict";
 
 /*jslint undef: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
 
@@ -273,15 +270,79 @@
 		 * @param {Object} target the target to check
 		 * @returns {Boolean} true if the object is defined, false otherwise
 		 */
-		HS.isDefined = _isDefined;
-		
-		HS.createConstantAccessor = _createConstantAccessor;
+		_HS.createConstantAccessor = _createConstantAccessor;
 
-		HS.handleError = _handleError;
+		_HS.handleError = _handleError;
 		
-		HS.isPrivate = function (propertyName) {return propertyName.charAt(0) === "_";};
+		_HS.isDefined = _isDefined;
+		
+		_HS.isPrivate = function (propertyName) {return propertyName.charAt(0) === "_";};
+		
+		_HS.isPublic = function (propertyName) {return propertyName.charAt(0) !== "_";};
+		
+		/**
+		 * returns whether or not an object is undefined
+		 * @function
+		 * @name isUndefined
+		 * @memberOf HotSausage
+		 * @param {Object} target the target to check
+		 * @returns {Boolean} true if the object is undefined, false otherwise
+		 */
+		_HS.isUndefined = function (target) {return typeof target === UNDEFINED;};
 
-		HS.isPublic = function (propertyName) {return propertyName.charAt(0) !== "_";};
+		/**
+		 * returns whether or not an object is a string
+		 * @function
+		 * @name isString
+		 * @memberOf HotSausage
+		 * @param {Object} target the target to check
+		 * @returns {Boolean} true if the object is a string, false otherwise
+		 */
+		_HS.isString = function (target) {return typeof target === STRING;};
+		
+		/**
+		 * returns whether or not an object is a boolean
+		 * @function
+		 * @name isBoolean
+		 * @memberOf HotSausage
+		 * @param {Object} target the target to check
+		 * @returns {Boolean} true if the object is a boolean, false otherwise
+		 */
+		_HS.isBoolean = function (target) {return typeof target === BOOLEAN;};
+
+		/**
+		 * returns whether or not an object is a number
+		 * @function
+		 * @name isNumber
+		 * @memberOf HotSausage
+		 * @param {Object} target the target to check
+		 * @returns {Boolean} true if the object is a number, false otherwise
+		 */
+		_HS.isNumber = function (target) {return typeof target === NUMBER;};
+		
+		/**
+		 * returns whether or not an object is a number
+		 * @function
+		 * @name notNumber
+		 * @memberOf HotSausage
+		 * @param {Object} target the target to check
+		 * @returns {Boolean} false if the object is a number, true otherwise
+		 */
+		_HS.notNumber = function (target) {return typeof target !== NUMBER;};
+		
+		/**
+		 * returns whether or not an an bobject has a local property
+		 * @function
+		 * @name hasLocalProperty
+		 * @memberOf HotSausage
+		 * @param {Object} the target
+		 * @param {String} the name of the property to check
+		 * @returns {Boolean} true if the object has a local copy of the property, false otherwise
+		 * @borrows Object#hasOwnProperty as this.isLocalProperty
+		 */
+		_HS.hasLocalProperty = function (target, propertyName) {
+			return HAS_OWN_PROPERTY.call(target, propertyName);
+		};
 		
 		/**
 		 * adds a new method to an object if the implementation function is
@@ -296,65 +357,22 @@
 		 */
 		HS.methodOn = _setMethod;
 		
+		HS.isDefined = _HS.isDefined;
+		HS.isPrivate = _HS.isPrivate;
+		HS.isPublic = _HS.isPublic;
+		HS.isPrivate = _HS.isPrivate;
+		HS.isPublic = _HS.isPublic;
+		HS.isUndefined = _HS.isUndefined;
+		HS.isString = _HS.isString;
+		HS.isBoolean = _HS.isBoolean;
+		HS.isNumber = _HS.isNumber;
+		HS.notNumber = _HS.notNumber;
+		
 		HS.isModule = function (target_) {
 			if (target_ === undefined) {return true;} // Just like normal Module.isModule
 			return (target_ instanceof Module);
 		};
-		
-		/**
-		 * returns whether or not an object is undefined
-		 * @function
-		 * @name isUndefined
-		 * @memberOf HotSausage
-		 * @param {Object} target the target to check
-		 * @returns {Boolean} true if the object is undefined, false otherwise
-		 */
-		HS.isUndefined = function (target) {return typeof target === UNDEFINED;};
-
-		/**
-		 * returns whether or not an object is a string
-		 * @function
-		 * @name isString
-		 * @memberOf HotSausage
-		 * @param {Object} target the target to check
-		 * @returns {Boolean} true if the object is a string, false otherwise
-		 */
-		HS.isString = function (target) {return typeof target === STRING;};
-		
-		/**
-		 * returns whether or not an object is a string
-		 * @function
-		 * @name isBoolean
-		 * @memberOf HotSausage
-		 * @param {Object} target the target to check
-		 * @returns {Boolean} true if the object is a boolean, false otherwise
-		 */
-		HS.isBoolean = function (target) {return typeof target === BOOLEAN;};
-
-		/**
-		 * returns whether or not an object is a string
-		 * @function
-		 * @name isNumber
-		 * @memberOf HotSausage
-		 * @param {Object} target the target to check
-		 * @returns {Boolean} true if the object is a number, false otherwise
-		 */
-		HS.isNumber = function (target) {return typeof target === NUMBER;};
-		
-		/**
-		 * returns whether or not an object is a string
-		 * @function
-		 * @name hasLocalProperty
-		 * @memberOf HotSausage
-		 * @param {Object} the target
-		 * @param {String} the name of the property to check
-		 * @returns {Boolean} true if the object has a local copy of the property, false otherwise
-		 * @borrows Object#hasOwnProperty as this.isLocalProperty
-		 */
-		HS.hasLocalProperty = function (target, propertyName) {
-			return HAS_OWN_PROPERTY.call(target, propertyName);
-		};
-				
+						
 		/**
 		 * sets the handle errors value to the parameter flag. If the flag is
 		 * omitted, errors will be handled quietly

@@ -1,4 +1,3 @@
-"use strict";
 /**
  * HotSausage Privacy Module
  * @author Maurice Rabb
@@ -12,13 +11,15 @@
  * @requires HotSausage
  */
 
+"use strict";
+
 /*jslint undef: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
 
 HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
-	var HS = Privacy.module();
-	//returns the targets prototype
-	//gets an (possibly) empty object depending on the parameter
+	// var HS = Privacy.module();
 	var _newObject = _Privacy_HS.newObject;
+	var _handleError = _Privacy_HS.handleError;
+	
 	var _SabotageHandlers = Privacy;
 	var _ActiveTransporter = _newObject();
 	var _CurrentSlot = _newObject();
@@ -141,7 +142,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @return {Object} the purse for the target
 	 */
 	var _attachPurse = function (target, purse_) {
-		var	purse = purse_ || _newObject(target);
+		var	purse = purse_ || _handleError(target);
 		if (target._purse !== undefined) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
 		}
@@ -185,7 +186,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @returns {Object} the target, if errors are set to be handled quietly
 	 */
 	Privacy.onImproperMethod = function (target, behavior, methodName, method) {
-		HS.handleError("ImproperMethod", "Method has been moved where it doesn't belong!");
+		_handleError("ImproperMethod", "Method has been moved where it doesn't belong!");
 		return target;
 	};
 	
@@ -202,7 +203,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @returns {Object} the target, if errors are set to be handled quietly
 	 */
 	Privacy.onImproperPurse = function (purse, target, actualPurseOwner) {
-		HS.handleError(
+		_handleError(
 			"ImproperPurse", "Another object's purse has been attached to the target object!"
 		);
 		return null;
@@ -210,7 +211,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	
 	
 	Privacy.onCounterfeitPurse = function (purse, target) {
-		HS.handleError(
+		_handleError(
 			"CounterfeitPurse", "A counterfeit purse is attached to the target object!"
 		);
 		return null;
@@ -230,7 +231,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @param {Object} an empty object, if errors are set to be handled quietly
 	 */
 	Privacy.onImproperPurseKey = function (target, invalidKey) {
-		HS.handleError(
+		_handleError(
 			"ImproperPurseKey", 
 			"Unauthorized attempt to access the target's purse using the wrong session key!"
 		);
@@ -249,7 +250,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @returns {null} null if errors are set to be handled quietly
 	 */
 	Privacy.onPurseAlreadyPresent = function (target) {
-		HS.handleError("ImproperAttemptToAttachPurse", "Target already has a purse!");
+		_handleError("ImproperAttemptToAttachPurse", "Target already has a purse!");
 		return null;
 	};
 	
