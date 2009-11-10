@@ -80,7 +80,7 @@
 		if (_isDefined(target[name])) {return _onSubmoduleNameAssigned(target, name);}
 		return (target[name] = moduleAction());
 	};
-
+	
 	var _HSModule, _newModule;
 	
 	/**
@@ -189,9 +189,11 @@
 			submodule.withAllSubmodulesDo(_action);
 		});
 	};
-
-	_HSModule.prototype.isModule = function () {return true;};
-
+	
+	_HSModule.prototype.isModule = function isModule(target_) {
+		return (arguments.length === 0) ? true : (target_.isModule === isModule);
+	};
+		
 	_HSModule.prototype.renameAs = function (_newName) {
 		var _submodule = this;
 		var _parentModule = _submodule.module();
@@ -321,16 +323,6 @@
 		_HS.isNumber = function (target) {return typeof target === NUMBER;};
 		
 		/**
-		 * returns whether or not an object is a number
-		 * @function
-		 * @name notNumber
-		 * @memberOf HotSausage
-		 * @param {Object} target the target to check
-		 * @returns {Boolean} false if the object is a number, true otherwise
-		 */
-		_HS.notNumber = function (target) {return typeof target !== NUMBER;};
-		
-		/**
 		 * returns whether or not an an bobject has a local property
 		 * @function
 		 * @name hasLocalProperty
@@ -366,13 +358,7 @@
 		HS.isString = _HS.isString;
 		HS.isBoolean = _HS.isBoolean;
 		HS.isNumber = _HS.isNumber;
-		HS.notNumber = _HS.notNumber;
 		
-		HS.isModule = function (target_) {
-			if (target_ === undefined) {return true;} // Just like normal Module.isModule
-			return (target_ instanceof Module);
-		};
-						
 		/**
 		 * sets the handle errors value to the parameter flag. If the flag is
 		 * omitted, errors will be handled quietly

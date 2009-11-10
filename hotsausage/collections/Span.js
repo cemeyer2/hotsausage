@@ -4,13 +4,23 @@
 
 HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	// var HS = Collections.module();
-	var _newObject = _Collections_HS.newObject;
 	var _direction = _Collections_HS.direction;
-	var _isBoolean = _Collections_HS.isBoolean;
 	var _isNumber = _Collections_HS.isNumber;
-	var _notNumber = _Collections_HS.notNumber;
-	var _createConstantAccessor = _Collections_HS.createConstantAccessor;
 
+	var ORIGINAL_IS_OK = _Collections_HS.newObject();
+	var ORIGINAL_MUST_BE_REPLACED = _Collections_HS.newObject();
+	var ORIGINAL_IS_AN_EDGE = _Collections_HS.newObject();
+	var POSTSPAN = "postspan";
+	var PRESPAN = "prespan";
+	
+	// If the direction is undefined or 0, 
+	//  the span can be either wrapping or nonwrapping
+	// If the direction is 1 (i.e. increasing)
+	//  if the startEdge < endEdge it is nonwrapping, 
+	//  if the startEdge >= endEdge it is wrapping
+	// If the direction is -1 (i.e. decreasing)
+	//  if the startEdge > endEdge it is nonwrapping, 
+	//  if the startEdge <= endEdge it is wrapping
 	var _Span = function (direction, startEdge, endEdge, wraps) {
 		this.direction = direction;
 		this.start = startEdge;
@@ -18,166 +28,137 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		this.wraps = wraps;
 	};
 	
-	var _calculateDirection = function (startEdge, endEdge) {
+	var _edgeToEdgeDirection = function (startEdge, endEdge) {
 		var startDirection = _direction(startEdge);
 		var endDirection = _direction(endEdge);
 		if (startDirection !== endDirection) {return undefined;}
+		if (startEdge === endEdge) {return 0;}
 		return (startEdge < endEdge) ? 1 : -1;
 	};
 	
-	var _newDirectionalSpan = function (direction, startEdge_, endEdge__, wraps__) {
+	var _newDirectionalSpan = function (spanDirection, startEdge_, endEdge__, wrapIfNecessary__) {
 		var startEdge = startEdge_ || 0;
-		var endEdge, wraps, calculatedDirection;
+		var endEdge, wraps, basicDirection;
 		if (_isNumber(endEdge__)) {
-			endEdge = endEdge__;
-			wraps = !!wraps__;
-			calculatedDirection = _calculateDirection(startEdge, endEdge);
-			if (calculatedDirection !== undefined) {
-				if (wraps) {
-					wraps = (calculatedDirection !== direction);
-				} else {
-					endEdge = (calculatedDirection === direction) ? endEdge__ : startEdge;
-				}
+			basicDirection = _edgeToEdgeDirection(startEdge, endEdge__);
+			if (wrapIfNecessary__) {
+				wraps = (basicDirection !== spanDirection);
+				endEdge = endEdge__;
+			} else {
+				wraps = false;
+				endEdge = (basicDirection * spanDirection === -1) ? startEdge : endEdge__;
 			}
 		} else {
 			endEdge = startEdge;
-			wrap = !!endEdge__;
+			wraps = !! endEdge__;
 		}
-		return new _Span(direction, startEdge, endEdge, wraps);
+		return new _Span(spanDirection, startEdge, endEdge, wraps);
 	};
-	
-	var Span = function (startEdge_, endEdge__) {
-		var startEdge = startEdge_ || 0;
-		var endEdge = endEdge__ || startEdge;
-		var direction = _calculateDirection(startEdge, endEdge);
-		return new _Span(direction, startEdge, endEdge, false);
-	};
-	
-	var _inc = function (startEdge_, endEdge__, wraps__) {
-		return _newDirectionalSpan(1, startEdge_, endEdge__, wraps__);
+		
+	var inc = function (startEdge_, endEdge__, wrapIfNecessary__) {
+		return _newDirectionalSpan(1, startEdge_, endEdge__, wrapIfNecessary__);
 	};
 
-	var _dec = function (startEdge_, endEdge__, wraps__) {
-		return _newDirectionalSpan(-1, startEdge_, endEdge__, wraps__);
+	var dec = function (startEdge_, endEdge__, wrapIfNecessary__) {
+		return _newDirectionalSpan(-1, startEdge_, endEdge__, wrapIfNecessary__);
 	};
 
-	Collection.Span = Span;
-	Collection.span = Span;
-	Span.span = Span;
-	Span.inc = _inc;
-	Span.dec = _dec;
+	var _theEmptySpan = new _Span(0, 0, 0, false);
 	
-	Span.Empty = _createConstantAccessor(_inc());
+	var basic = function Span(startEdge_, endEdge__) {
+		var endEdge, derivedDirection;
+		if (arguments.length === 0) {return _theEmptySpan;}
+		endEdge = endEdge__ || startEdge_;
+		derivedDirection = _edgeToEdgeDirection(startEdge_, endEdge);
+		return new _Span(derivedDirection, startEdge_, endEdge, false);
+	};
+
+	var _isSpan = function () {return true;};
 	
-	Span.Entire = function () {return _inc(0, true);};
+	var Span = basic;
 	
-	Span.isSpan = function (target) {return (target instanceof _Span);};
+	Collections.Span = Span;
+	
+	Span.empty = _Collections_HS.createConstantAccessor(_theEmptySpan);
+	Span.allForward = _Collections_HS.createConstantAccessor(inc(0, true));	
+	Span.allBackward = _Collections_HS.createConstantAccessor(dec(0, true));	
+	
+	Span.basic = basic;
+	Span.inc = inc;
+	Span.dec = dec;
+	
+	Span.isSpan = function (target) {return (target.isSpan === _isSpan);};
 	
 	Span.prototype.isSpan = function () {return true;};
 	
 	Span.prototype.size = function () {
-		var start = this.start;
-		var end = this.end;
-		if (this.direction === undefined) {return undefined;}
-		
-		if (this.direction > 0) {
-			if (end > start) {return end - start;}
-		} else {
-			if (start > end) {return start - end;}
-		}
-		return (this.wraps) ? undefined : 0;
+		var direction = this.direction;
+		if (direction === undefined || this.wraps) {return undefined;}
+		return this.direction * (this.end - this.start);
 	};
 	
 	Span.prototype.asNormalizedFor = function (sizeOrList, outOfBoundsAction_) {
 		var size = (_isNumber(sizeOrList)) ? sizeOrList : sizeOrList.size(),
-			normalizedSpan = this,
-			problem, problems = {},
+			normalizedSpan = this, status = ORIGINAL_IS_OK,
+			outfBounds, problems = {},
 			upperEdge = size, lowerEdge = -upperEdge,
 			start = this.start, end = this.end, 
 			wraps = this.wraps, direction = this.direction,
 			hasNegativeStart = _direction(start) < 0,
 			hasNegativeEnd = _direction(end) < 0,
-			edgeForEmptySpan = start,
-			linearStart = start, normStart = start, 
-			linearEnd = end, normEnd = end;
+			normalizedStart = start, normalizedEnd = end,
+			linearStart = start, linearEnd = end;
 		
 		if (start > upperEdge) {
-			problems.start = (problem = "postspan");
-			normStart = size;
-			normalizedSpan = ORIGINAL_NOT_OK;
+			problems.start = (outfBounds = POSTSPAN);
+			normalizedStart = size;
+			status = ORIGINAL_MUST_BE_REPLACED;
 		} else if (hasNegativeStart) {
 			linearStart = start + size;
 			if (start < lowerEdge) {
-				problems.start = (problem = "prespan");
-				normStart = 0;
+				problems.start = (outfBounds = PRESPAN);
+				normalizedStart = 0;
 			} else {
-				edgeForEmptySpan = normStart = linearStart;
+				normalizedStart = linearStart;
 			}
-			normalizedSpan = ORIGINAL_NOT_OK;
+			status = ORIGINAL_MUST_BE_REPLACED;
 		}
 		if (end > upperEdge) {
-			problems.end = (problem = "postspan");
-			normEnd = size;
-			normalizedSpan = ORIGINAL_NOT_OK;
+			problems.end = (outfBounds = POSTSPAN);
+			normalizedEnd = size;
+			status = ORIGINAL_MUST_BE_REPLACED;
 		} else if (hasNegativeEnd) {
 			linearEnd = end + size;
 			if (end < lowerEdge) {
-				problems.end = (problem = "prespan");
-				normEnd = 0;
+				problems.end = (outfBounds = PRESPAN);
+				normalizedEnd = 0;
 			} else {
-				normEnd = linearEnd;
+				normalizedEnd = linearEnd;
 			}
-			normalizedSpan = ORIGINAL_NOT_OK;
+			status = ORIGINAL_MUST_BE_REPLACED;
 		}
-		if (wraps) {
-			if (direction >= 0) {
-				if (linearStart < linearEnd) {
-					normalizedSpan = ORIGINAL_NOT_OK;
-					wraps = false;
-				}
-			} else {
-				if (linearEnd < linearStart) {
-					normalizedSpan = ORIGINAL_NOT_OK;
-					wraps = false;
-				}
-			}
-		} else {
+		if (!wraps) {
 			if (direction === undefined) {
 				direction = (linearEnd - linearStart) >= 0 ? 1 : -1;
-			} else if (direction >= 0) {
-				if (linearEnd < linearStart) {
-					normalizedSpan = _inc(edgeForEmptySpan);
-				} else if (problem) {
-					if (start === end) {normalizedSpan = ORIGINAL_IS_AN_EDGE;}
-					else if (end < lowerEdge) {
-						normalizedSpan = _inc(end);
-					} else if (start > upperEdge) {
-						normalizedSpan = _inc(start);
-					}
-				}
-			} else {
-				if (linearStart < linearEnd) {
-					normalizedSpan = _dec(edgeForEmptySpan);
-				} else if (problem) {
-					if (start === end) {normalizedSpan = ORIGINAL_IS_AN_EDGE;}
-					else if (start < lowerEdge) {
-						normalizedSpan = _dec(start);
-					} else if (end > upperEdge) {
-						normalizedSpan = _dec(end);
-					}
+				// Implicit status = ORIGINAL_MUST_BE_REPLACED because an undefined   
+				// direction is only possible with a negative start or negative end value.
+			} else if (outfBounds) {
+				// If allowing an out-of-bounds span, it must be compressed to an edge.
+				if (start === end) {status = ORIGINAL_IS_AN_EDGE;}
+				else if (direction >= 0) {
+					if (end < lowerEdge) {normalizedStart = normalizedEnd = end;} 
+					else if (start > upperEdge) {normalizedStart = normalizedEnd = start;}
+				} else {
+					if (start < lowerEdge) {normalizedStart = normalizedEnd = start;} 
+					else if (end > upperEdge) {normalizedStart = normalizedEnd = end;}
 				}
 			}
 		}
-		if (normalizedSpan === this) {return this;}
-		if (normalizedSpan === ORIGINAL_NOT_OK) {
-		 	normalizedSpan = new _Span(direction, normStart, normEnd, wraps);
+		if (status === ORIGINAL_IS_OK) {return this;}
+		if (status === ORIGINAL_MUST_BE_REPLACED) {
+			normalizedSpan = new _Span(direction, normalizedStart, normalizedEnd, wraps);
 		}
-		if (problem) {
-			if (normalizedSpan === ORIGINAL_IS_AN_EDGE) {normalizedSpan = this;}
-			if (outOfBoundsAction_) {
-				return outOfBoundsAction_(problems, normalizedSpan);
-			}
-		}
+		if (outfBounds && outOfBoundsAction_) {return outOfBoundsAction_(normalizedSpan, problems);}
 		return normalizedSpan;
 	};
-})();	
+});	
