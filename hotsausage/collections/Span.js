@@ -19,7 +19,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	// If the direction is -1 (i.e. decreasing)
 	//  if the startEdge > endEdge it is nonwrapping, 
 	//  if the startEdge <= endEdge it is wrapping
-	var _Span = function (direction, startEdge, endEdge, wraps) {
+	var Span = function (direction, startEdge, endEdge, wraps) {
 		this.direction = direction;
 		this.start = startEdge;
 		this.end = endEdge;
@@ -51,7 +51,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 			endEdge = startEdge;
 			wraps = !! endEdge__;
 		}
-		return new _Span(spanDirection, startEdge, endEdge, wraps);
+		return new Span(spanDirection, startEdge, endEdge, wraps);
 	};
 		
 	var inc = function (startEdge_, endEdge__, wrapIfNecessary__) {
@@ -62,51 +62,55 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		return _newDirectionalSpan(-1, startEdge_, endEdge__, wrapIfNecessary__);
 	};
 
-	var _theEmptySpan = new _Span(0, 0, 0, false);
+	var _theEmptySpan = new Span(0, 0, 0, false);
 	
-	var basic = function basicSpan(startEdge_, endEdge__) {
+	var Collections_Span = function basicSpan(startEdge_, endEdge__) {
 		var endEdge, derivedDirection;
 		if (arguments.length === 0) {return _theEmptySpan;}
 		endEdge = endEdge__ || startEdge_;
 		derivedDirection = _edgeToEdgeDirection(startEdge_, endEdge);
-		return new _Span(derivedDirection, startEdge_, endEdge, false);
+		return new Span(derivedDirection, startEdge_, endEdge, false);
 	};
 
 	var _isSpan = function () {return true;};
 	
-	var Span = basic;
-	var SpanBehavior = Span.prototype;
+	var Span_prototype = Span.prototype;
 	
-	Collections.Span = Span;
+	Collections_Span.basic = Collections_Span;
+	Collections_Span.inc = inc;
+	Collections_Span.dec = dec;
 	
-	Span.empty = createConstantAccessor(_theEmptySpan);
-	Span.allForward = createConstantAccessor(inc(0, true));	
-	Span.allBackward = createConstantAccessor(dec(0, true));	
+	Collections_Span.empty = createConstantAccessor(_theEmptySpan);
+	Collections_Span.allForward = createConstantAccessor(inc(0, true));	
+	Collections_Span.allBackward = createConstantAccessor(dec(0, true));	
 	
-	Span.basic = basic;
-	Span.inc = inc;
-	Span.dec = dec;
+	Collections_Span.isSpan = function (target) {return (target.isSpan === _isSpan);};
 	
-	Span.isSpan = function (target) {return (target.isSpan === _isSpan);};
+	Collections.Span = Collections_Span;
 	
-	SpanBehavior.isSpan = function () {return true;};
 	
-	SpanBehavior.size = function () {
+	Span_prototype.isSpan = _isSpan;
+	
+	Span_prototype.newInstance = function (direction, startEdge, endEdge, wraps) {
+		return new Span(direction, startEdge, endEdge, wraps);
+	};
+	
+	Span_prototype.size = function () {
 		var direction = this.direction;
 		if (direction === undefined || this.wraps) {return undefined;}
 		return this.direction * (this.end - this.start);
 	};
 	
-	SpanBehavior.asNormalizedFor = function (sizeOrList, outOfBoundsAction_) {
+	Span_prototype.asNormalizedFor = function (sizeOrList, outOfBoundsAction_) {
 		var size = (_isNumber(sizeOrList)) ? sizeOrList : sizeOrList.size(),
-			newSpan = this, createNewSpan, 
+			newSpan = this, needsNewSpan, 
 			problems = {}, outfBounds,
 			upperEdge = size, lowerEdge = -upperEdge,
 			start = this.start, end = this.end, 
 			wraps = this.wraps, direction = this.direction,
 			newStart, newEnd, linearStart, linearEnd;
 	
-		if (createNewSpan = (_direction(start) < 0)) {
+		if (needsNewSpan = (_direction(start) < 0)) {
 			linearStart = start + size;
 			if (start < lowerEdge) {
 				problems.start = (outfBounds = PRESPAN);
@@ -117,7 +121,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 			}
 		} else {
 			linearStart = start;
-			if (createNewSpan = (start > upperEdge)) {
+			if (needsNewSpan = (start > upperEdge)) {
 				problems.start = (outfBounds = POSTSPAN);
 				if (!wraps && direction >= 0) {newStart = newEnd = start;} 
 				else {newStart = size;} 
@@ -127,9 +131,9 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		}
 		if (start === end) {newEnd = newStart;}
 		if (newEnd !== undefined) {
-			newSpan = (newEnd === end) ? this : new _Span(direction, newStart, newEnd, false);
+			newSpan = newEnd === end ? this : this.newInstance(direction, newStart, newEnd, false);
 		} else {
-			if (createNewSpan = (_direction(end) < 0)) {
+			if (needsNewSpan = (_direction(end) < 0)) {
 				linearEnd = end + size;
 				if (end < lowerEdge) {
 					problems.end = (outfBounds = PRESPAN);
@@ -140,7 +144,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 				}
 			} else {
 				linearEnd = end;
-				if (createNewSpan = (end > upperEdge)) {
+				if (needsNewSpan = (end > upperEdge)) {
 					problems.end = (outfBounds = POSTSPAN);
 					if (!wraps && direction <= 0) {newStart = newEnd = end;}
 					else {newEnd = size;}
@@ -149,8 +153,8 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 				}
 			}
 			if (direction === undefined) {direction = (linearEnd - linearStart) >= 0 ? 1 : -1;}
-			newSpan = (createNewSpan) ? 
-				new _Span(direction, newStart || start, newEnd || end, wraps) : this;
+			newSpan = needsNewSpan ? 
+				this.newInstance(direction, newStart || start, newEnd || end, wraps) : this;
 		}
 		return (outfBounds && outOfBoundsAction_) ? outOfBoundsAction_(newSpan, problems) : newSpan;
 	};

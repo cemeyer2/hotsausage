@@ -1,5 +1,17 @@
 
 /*
+	removeOver
+	replaceWithAllOver
+	spanOver
+	replaceWithOver
+
+	removeOverEvery
+	replaceWithAllOverEvery
+	spanOverEvery
+	replaceWithOverEvery
+*/
+
+/*
 	spanOver(matchElements, span_, invalidRangeAction_)
 	replaceWithOver(replacement, matchElements, span_, invalidRangeAction_)
 	replaceWithAllOver(replacements, matchElements, span_, invalidRangeAction_)
