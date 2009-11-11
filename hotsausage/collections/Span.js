@@ -8,9 +8,6 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	var _isNumber = _Collections_HS.isNumber;
 	var createConstantAccessor = _Collections_HS.createConstantAccessor;
 
-	var SPAN_IS_OK = {};
-	var CREATE_NEW_SPAN = {};
-	var SPAN_IS_AN_OUT_OF_BOUNDS_EDGE = {};
 	var POSTSPAN = "postspan";
 	var PRESPAN = "prespan";
 	
@@ -102,69 +99,53 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	
 	SpanBehavior.asNormalizedFor = function (sizeOrList, outOfBoundsAction_) {
 		var size = (_isNumber(sizeOrList)) ? sizeOrList : sizeOrList.size(),
-			normalizedSpan = this, status = SPAN_IS_OK,
-			outfBounds, problems = {},
+			newSpan = this, problems = {}, outfBounds,
 			upperEdge = size, lowerEdge = -upperEdge,
 			start = this.start, end = this.end, 
 			wraps = this.wraps, direction = this.direction,
-			newStart = start, newEnd = end,
-			linearStart = start, linearEnd = end;
-		
-		if (start > upperEdge) {
-			problems.start = (outfBounds = POSTSPAN);
-			newStart = size;
-			status = CREATE_NEW_SPAN;
-		} else if (_direction(start) < 0) {
+			newStart, newEnd, linearStart, linearEnd;
+	
+		if (_direction(start) > 0) {
+			linearStart = start;
+			if (start > upperEdge) {
+				problems.start = (outfBounds = POSTSPAN);
+				if (!wraps && direction >= 0) {newStart = newEnd = start;} 
+				else {newStart = size;} 
+			}
+		} else {
 			linearStart = start + size;
 			if (start < lowerEdge) {
 				problems.start = (outfBounds = PRESPAN);
-				newStart = 0;
+				if (!wraps && direction <= 0) {newStart = newEnd = start;} 
+				else {newStart = 0;}
 			} else {
 				newStart = linearStart;
 			}
-			status = CREATE_NEW_SPAN;
 		}
-		if (end > upperEdge) {
-			problems.end = (outfBounds = POSTSPAN);
-			newEnd = size;
-			status = CREATE_NEW_SPAN;
-		} else if (_direction(end) < 0) {
-			linearEnd = end + size;
-			if (end < lowerEdge) {
-				problems.end = (outfBounds = PRESPAN);
-				newEnd = 0;
+		if (start === end) {newEnd = newStart;}
+		if (newEnd) {
+			newSpan = (newEnd === end) ? this : new _Span(direction, newStart, newStart, false);
+		} else {
+			if (_direction(end) > 0) {
+				linearEnd = end;
+				if (end > upperEdge) {
+					problems.end = (outfBounds = POSTSPAN);
+					if (!wraps && direction <= 0) {newStart = newEnd = end;}
+					else {newEnd = size;}
+				}
 			} else {
-				newEnd = linearEnd;
-			}
-			status = CREATE_NEW_SPAN;
-		}
-		if (!wraps) {
-			// Nonwrapping span
-			if (direction === undefined) {
-				direction = (linearEnd - linearStart) >= 0 ? 1 : -1;
-				// Implicit status = CREATE_NEW_SPAN because an undefined   
-				// direction is only possible with a negative start or negative end value.
-				// If the direction is undefined, it is impossible for both edges of the span
-				// to be both be prespan or postspan as below.
-			} else if (outfBounds) {
-				// If allowing an out-of-bounds span, it must be compressed to an edge.
-				if (start === end) {
-					if (start < lowerEdge) {newStart = newEnd = linearStart;} 
-					else {status = SPAN_IS_AN_OUT_OF_BOUNDS_EDGE;}
-				else if (direction >= 0) {
-					if (end < lowerEdge) {newStart = newEnd = linearEnd;} 
-					else if (start > upperEdge) {newStart = newEnd = start;}
+				linearEnd = end + size;
+				if (end < lowerEdge) {
+					problems.end = (outfBounds = PRESPAN);
+					if (!wraps && direction >= 0) {newStart = newEnd = end;}
+					else {newEnd = 0;} 
 				} else {
-					if (start < lowerEdge) {newStart = newEnd = linearStart;} 
-					else if (end > upperEdge) {newStart = newEnd = end;}
+					newEnd = linearEnd;
 				}
 			}
+			if (direction === undefined) {direction = (linearEnd - linearStart) >= 0 ? 1 : -1;}
+			newSpan = (newStart || newEnd) ? new _Span(direction, newStart, newEnd, wraps) : this;
 		}
-		if (status === SPAN_IS_OK) {return this;}
-		if (status === CREATE_NEW_SPAN) {
-			newSpan = new _Span(direction, newStart, newEnd, wraps);
-		}
-		if (outfBounds && outOfBoundsAction_) {return outOfBoundsAction_(newSpan, problems);}
-		return newSpan;
+		return (outfBounds && outOfBoundsAction_) ? outOfBoundsAction_(newSpan, problems) : newSpan;
 	};
 });	
