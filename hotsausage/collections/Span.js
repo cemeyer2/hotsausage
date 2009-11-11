@@ -99,20 +99,14 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	
 	SpanBehavior.asNormalizedFor = function (sizeOrList, outOfBoundsAction_) {
 		var size = (_isNumber(sizeOrList)) ? sizeOrList : sizeOrList.size(),
-			newSpan = this, problems = {}, outfBounds,
+			newSpan = this, createNewSpan, 
+			problems = {}, outfBounds,
 			upperEdge = size, lowerEdge = -upperEdge,
 			start = this.start, end = this.end, 
 			wraps = this.wraps, direction = this.direction,
 			newStart, newEnd, linearStart, linearEnd;
 	
-		if (_direction(start) > 0) {
-			linearStart = start;
-			if (start > upperEdge) {
-				problems.start = (outfBounds = POSTSPAN);
-				if (!wraps && direction >= 0) {newStart = newEnd = start;} 
-				else {newStart = size;} 
-			}
-		} else {
+		if (createNewSpan = (_direction(start) < 0)) {
 			linearStart = start + size;
 			if (start < lowerEdge) {
 				problems.start = (outfBounds = PRESPAN);
@@ -121,19 +115,21 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 			} else {
 				newStart = linearStart;
 			}
+		} else {
+			linearStart = start;
+			if (createNewSpan = (start > upperEdge)) {
+				problems.start = (outfBounds = POSTSPAN);
+				if (!wraps && direction >= 0) {newStart = newEnd = start;} 
+				else {newStart = size;} 
+			} else {
+				newStart = start;
+			}
 		}
 		if (start === end) {newEnd = newStart;}
-		if (newEnd) {
-			newSpan = (newEnd === end) ? this : new _Span(direction, newStart, newStart, false);
+		if (newEnd !== undefined) {
+			newSpan = (newEnd === end) ? this : new _Span(direction, newStart, newEnd, false);
 		} else {
-			if (_direction(end) > 0) {
-				linearEnd = end;
-				if (end > upperEdge) {
-					problems.end = (outfBounds = POSTSPAN);
-					if (!wraps && direction <= 0) {newStart = newEnd = end;}
-					else {newEnd = size;}
-				}
-			} else {
+			if (createNewSpan = (_direction(end) < 0)) {
 				linearEnd = end + size;
 				if (end < lowerEdge) {
 					problems.end = (outfBounds = PRESPAN);
@@ -142,9 +138,19 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 				} else {
 					newEnd = linearEnd;
 				}
+			} else {
+				linearEnd = end;
+				if (createNewSpan = (end > upperEdge)) {
+					problems.end = (outfBounds = POSTSPAN);
+					if (!wraps && direction <= 0) {newStart = newEnd = end;}
+					else {newEnd = size;}
+				} else {
+					newEnd = end;
+				}
 			}
 			if (direction === undefined) {direction = (linearEnd - linearStart) >= 0 ? 1 : -1;}
-			newSpan = (newStart || newEnd) ? new _Span(direction, newStart, newEnd, wraps) : this;
+			newSpan = (createNewSpan) ? 
+				new _Span(direction, newStart || start, newEnd || end, wraps) : this;
 		}
 		return (outfBounds && outOfBoundsAction_) ? outOfBoundsAction_(newSpan, problems) : newSpan;
 	};
