@@ -46,11 +46,18 @@
 		<script language="JavaScript">
 
 			//modify these as needed
-			var ind = ["../hotsausage/HotSausage.js", "../hotsausage/Privacy.js"];
 			var full = ["../build/HotSausage_full.js"];
 			var min  = ["../build/HotSausage_full-min.js"];
+			var ind = [
+				"../hotsausage/HotSausage.js", 
+				"../hotsausage/Privacy.js",
+				"../hotsausage/collections/Collections.js"
+			];
 			//modify this as needed
-			var tests = ["tests/HotSausageTests.js"];
+			var tests = [
+				// "tests/HotSausageTests.js",
+				"tests/CollectionsTests.js"
+			];
 			
 			var runTests = function (src) {
 				var i;

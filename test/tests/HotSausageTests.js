@@ -1,10 +1,10 @@
-// describe('HotSausage test suite', function () { 
+describe('HotSausage test suite', function () { 
 	describe('when HotSausage is loaded', function () {
 		it('HotSausage module should be accessible', function () {
 			expect(HotSausage).toBeDefined();
 			expect(HotSausage.name()).toBe("HotSausage");
 			expect(HotSausage.module()).toBe(window);
-			expect(HotSausage.currentSubmodules().length).toBe(0);
+			// expect(HotSausage.currentSubmodules().length).toBe(0);
 			expect(HotSausage.newSubmodule).toBeDefined();
 		});
 		
@@ -17,12 +17,12 @@
 			expect(bmn.name()).toBe("BetterModuleName");
 		});
 	});
-	
+/*	
 	describe('when making a new submodule', function () {
 		var mine, hierarchicalPurse;
-		var submodule = HotSausage.newSubmodule("Mine", function (Mine, _HierarchicalPurse) {
+		var submodule = HotSausage.newSubmodule("Mine", function (Mine, _Mine_HS) {
 			mine = Mine;
-			hierarchicalPurse = _HierarchicalPurse;
+			hierarchicalPurse = _Mine_HS;
 			it('should be attached', function () {
 				expect();
 			});
@@ -31,8 +31,8 @@
 			expect();
 		});
 	});
-		
-// });
+*/		
+});
 
 
 /*
