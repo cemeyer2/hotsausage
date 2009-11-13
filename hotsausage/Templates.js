@@ -5,8 +5,7 @@
 HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	// var HS = Templates.module();
 	var _newObject = _Templates_HS.newObject;
-	var _hasLocalProperty = _Templates_HS.hasLocalProperty;
-	var _isPublic = _Templates_HS.isPublic;
+	var _hasLocalPublicProperty = _Templates_HS.hasLocalPublicProperty;
 	var _handleError = _Templates_HS.handleError;
 	
 	var _dontOverwriteExistingTemplates = true;
@@ -271,7 +270,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		var targetPurse = _purseOf(targetInstance);
 		var propertyName;
 		for (propertyName in sourcePurse) {
-			if (_isPublic(propertyName) && _hasLocalProperty(sourcePurse, propertyName)) {
+			if (_hasLocalPublicProperty(sourcePurse, propertyName)) {
 				targetPurse[propertyName] = sourcePurse[propertyName];
 			}
 		}
@@ -283,12 +282,12 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		var localStateA = _newObject();
 		var propertyName;
 		for (propertyName in purseA) {
-			if (_hasLocalProperty(purseA, propertyName) && _isPublic(propertyName)) {
+			if (_hasLocalPublicProperty(purseA, propertyName)) {
 				localStateA[propertyName] = purseA[propertyName];
 			}
 		}
 		for (propertyName in purseB) {
-			if (_hasLocalProperty(purseB, propertyName) && _isPublic(propertyName)) {
+			if (_hasLocalPublicProperty(purseB, propertyName)) {
 				if (purseB[propertyName] !== localStateA[propertyName]) {return false;}
 				delete localStateA[propertyName];
 			}
@@ -390,7 +389,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 
 	templateInstance0.method("setName", function (type) {this.type = type;});	
 	
-	templateInstance0.method("isEqual", function (that) {
+	templateInstance0.method("isEqualTo", function (that) {
 		// One SHOULD CONSIDER overriding this method.
 		// return this.isIdentical(that);
 		return this.isSameAs(that);

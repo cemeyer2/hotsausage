@@ -219,7 +219,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		
 	var _theEmptyList = new List([]);
 	
-	var Collections_List = function basicList(array_) {
+	var newList = function (array_) {
 		if (array_) {return new List(array_);}
 		return (this instanceof basicList) ? new List([]) : _theEmptyList;
 	};
@@ -234,16 +234,18 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		return _isNumber(edgeOrSpan) ? _inc(edgeOrSpan) : edgeOrSpan;
 	};
 	
+	var Collections_List, List_prototype;
 	
-	var List_prototype = List.prototype;
+	
+	Collections.List = newList;
+	Collections_List = Collections.List;
 	
 	Collections_List.empty = createConstantAccessor(_theEmptyList);	
 	
 	Collections_List.isList = function (target) {return (target.isList === _isList);};
 	
-	Collections.List = Collections_List;
 	
-	
+	List_prototype = List.prototype;
 	
 	// CREATING
 	
@@ -352,9 +354,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		return this.indexOfEverySatisfying(matchAction, span_, invalidSpanAction__);
 	};
 	
-	List_prototype.size = function () {
-		return this._elements.length;
-	};
+	List_prototype.size = function () {return this._elements.length;};
 
 	// TESTING
 	

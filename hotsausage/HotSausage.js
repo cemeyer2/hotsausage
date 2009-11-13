@@ -336,6 +336,10 @@
 			return HAS_OWN_PROPERTY.call(target, propertyName);
 		};
 		
+		_HS.hasLocalPublicProperty = function (target, propertyName) {
+			return _hasLocalProperty(target, propertyName) && _isPublic(propertyName);
+		};
+		
 		/**
 		 * adds a new method to an object if the implementation function is
 		 * supplied, if it is not, then the method is removed from the
