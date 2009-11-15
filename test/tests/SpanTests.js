@@ -1,61 +1,105 @@
 describe('Span test suite', function () { 
 	var Span = HotSausage.Collections.Span;
+	var equalValues = HotSausage.Collections.equalValues;
+	var FWD = 1;
+	var NON = 0;
+	var BWD = -1;
 	
-	var _checkSpanProperties = function (span, start, end, direction, wraps) {
-		expect(span.start).toBe(start);
-		expect(span.end).toBe(end);
-		expect(span.direction).toBe(direction);
+	var _checkSpanProperties = function (span, wraps, start, end, direction, impliedDirection_) {
+		var impliedDirection = (arguments.length === 5) ? direction : impliedDirection_;
 		expect(span.wraps).toBe(wraps);
+		expect( equalValues(span.start, start) ).toBe(true);
+		expect( equalValues(span.end, end) ).toBe(true);
+		expect(span.direction).toBe(direction);
+		expect(span.impliedDirection).toBe(impliedDirection);
 	};
 	
 	describe('When creating a basic span', function () { 
-		var theEmptySpan = Span.basic();
+		var theEmptySpan = Span.empty();
 		
 		describe('When using 0 params', function () {
 			it('should always answer the canonical basic span', function () {
-				var span0 = Span.basic();
-				expect(span0).toBe(theEmptySpan);
-				_checkSpanProperties(span0, 0, 0, 1, false);
+				var span = Span.basic();
+				expect(span).toBe(theEmptySpan);
+				expect( span.isSameAs(Span.edge(0)) ).toBe( true );
+				_checkSpanProperties(span, false, 0, 0, NON);
 			});
-		};
+		});
 		
 		describe('When using 1 params', function () {
-			it('should answer a new basic edge span', function () {
+			it('should answer a new edge span', function () {
 				expect( Span.basic(0).isSameAs(theEmptySpan) ).toBe( true );
-				expect( Span.basic(0) ).notToBe( theEmptySpan );
-				_checkSpanProperties( Span.basic(3), 3, 3, 1, false );
-				_checkSpanProperties( Span.basic(-5), -5, -5, 1, false );
+				expect( Span.basic(0) ).toNotBe( theEmptySpan );
+				expect( Span.basic(3).isSameAs(Span.edge(3)) ).toBe( true );
+				_checkSpanProperties( Span.basic(3), false, 3, 3, NON );
+				_checkSpanProperties( Span.basic(-5), false, -5, -5, NON );
 			});
-		};
+			
+			it('using -0 should be different from using 0', function () {
+				expect( Span.basic(-0).isSameAs( Span.basic(0) )).toBe( false );
+			});
+		});
 		
 		describe('When using 2 params', function () {
 			it('should be the same as an single edge when both edges are the same', function () {
-				expect( Span.basic(5, 5).isSameAs( Span.basic(5) )).toBe( true );
-				expect( Span.basic(-0, -0).isSameAs( Span.basic(-0) )).toBe( true );
-				expect( Span.basic(-0, -0).isSameAs( Span.basic(0) )).toBe( false );
-			};
-		};
-		it('two identical edges should make a nondirectional nonwrapping edge span', function () {
-			_checkSpanProperties( Span.basic(5, 5), 5, 5, 0, false );
-			_checkSpanProperties( Span.basic(-0, -0), 0, 0, 0, false );
-		});
-		
-		it('two different same signed args should make a directional nonwrapping span', function () {
-			_checkSpanProperties( Span.basic(5, 7), 5, 7, 1, false );
-			_checkSpanProperties( Span.basic(10, 3), 10, 3, -1, false );
-			_checkSpanProperties( Span.basic(-100, -1), -100, -1, 1, false );
-			_checkSpanProperties( Span.basic(-12, -20), -12, -20, -1, false );
-		});
-		
-		it('the direction of two opposite signed args should be undefined', function () {
-			expect( Span.basic(-0, 0) ).notToBe( Span.basic(0, -0) );
+				expect( Span.basic(5, 5).isSameAs( Span.edge(5) )).toBe( true );
+				expect( Span.basic(-0, -0).isSameAs( Span.edge(-0) )).toBe( true );
+			});
 			
-			_checkSpanProperties( Span.basic(5, -7), 5, -7, undefined, false );
-			_checkSpanProperties( Span.basic(-1, 2), -1, 2, undefined, false );
-			_checkSpanProperties( Span.basic(-0, 0), 0, 0, undefined, false );
-			_checkSpanProperties( Span.basic(0, -0), 0, 0, undefined, false );
+			it('using -0 should be different from using 0', function () {
+				expect( Span.basic(-0, -0).isSameAs( Span.edge(0) )).toBe( false );
+				expect( Span.basic(-0, -0).isSameAs( Span.basic(0, 0) )).toBe( false );
+				expect( Span.basic(0, -0).isSameAs( Span.basic(0, 0) )).toBe( false );
+				expect( Span.basic(0, -0).isSameAs( Span.basic(-0, 0) )).toBe( false );
+			});
+			
+			it('should be forward direction when increasing', function () {
+				_checkSpanProperties( Span.basic(5, 7), false, 5, 7, FWD );
+				_checkSpanProperties( Span.basic(-100, -1), false, -100, -1, FWD );
+			});
+			
+			it('should be backward direction when decreasing', function () {
+				_checkSpanProperties( Span.basic(10, 3), false, 10, 3, BWD );
+				_checkSpanProperties( Span.basic(-12, -20), false, -12, -20, BWD );				
+			});
+			
+			it('should be nondirectional when the args are the same but non zero', function () {
+				_checkSpanProperties( Span.basic(10, 10), false, 10, 10, NON );
+				_checkSpanProperties( Span.basic(-3, -3), false, -3, -3, NON );
+			});
+			
+			it('should be able to set the direction of spans beginning or ending with 0/-0', function () {
+				_checkSpanProperties( Span.basic(0, 0), false, 0, 0, NON );		
+				_checkSpanProperties( Span.basic(0, 0), false, 0, 0, NON );		
+				_checkSpanProperties( Span.basic(0, 0), false, 0, 0, NON );				
+			});
 		});
+	});
+
+	describe('When creating an incrementing span', function () { 
+		describe('When using 0 params', function () {
+			it('should always answer a newforward nonwrapping 0 edge', function () {
+				var span = Span.inc();
+				expect( span.isSameAs(Span.inc()) ).toBe(true);
+				expect( span === Span.inc() ).toBe(false);
+				expect( span.isSameAs(Span.edge(0)) ).toBe( false );
 				
+				_checkSpanProperties(span, false, 0, 0, FWD, NON);
+			});
+		});
+		
+		describe('When using 1 params', function () {
+			it('should answer a standard inc span span', function () {
+				expect( Span.inc(0).isSameAs(Span.inc()) ).toBe( true );
+				
+				_checkSpanProperties( Span.inc(3), false, 3, 3, FWD, NON );
+				_checkSpanProperties( Span.inc(-5), false, -5, -5, FWD, NON );
+			});
+			
+			it('using -0 should be different from using 0', function () {
+				expect( Span.inc(-0).isSameAs( Span.inc(0) )).toBe( false );
+			});
+		});
 	});
 });
 

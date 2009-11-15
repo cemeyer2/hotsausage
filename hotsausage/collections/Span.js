@@ -13,6 +13,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	var PRESPAN = "prespan";
 	var FORWARD = 1;
 	var BACKWARD = -1;
+	var NONDIRECTIONAL = 0;
 	
 	// If the direction is undefined or 0, 
 	//  the span can be either wrapping or nonwrapping
@@ -22,100 +23,113 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	// If the direction is -1 (i.e. decreasing)
 	//  if the startEdge > endEdge it is nonwrapping, 
 	//  if the startEdge <= endEdge it is wrapping
-	var Span = function (direction, startEdge, endEdge, wraps) {
+	var Span = function (direction, impliedDirection, startEdge, endEdge, wraps) {
 		this.direction = direction;
+		this.impliedDirection = impliedDirection;
 		this.start = startEdge;
 		this.end = endEdge;
 		this.wraps = wraps;
 		// this.wrapIfNecessary = wrapIfNecessary_;
 	};
 	
-	var _theDefaultSpan = new Span(FORWARD, 0, 0, false);
-	
+	var _theDefaultSpan = new Span(NONDIRECTIONAL, NONDIRECTIONAL, 0, 0, false);
+		
 	var _impliedDirectionFrom = function (startEdge, endEdge) {
-		var startIsNegativeZero = true;
+		var zeroEndEdge, endSignValue;
+		// c1     +0  ->  +0          NONDIRECTIONAL
+		// c2 c3  +0  ->  -0 | ±N     FORWARD
+		// c4     -0  ->  -0          NONDIRECTIONAL
+		// c5 c6  -0  ->  +0 | ±N     BACKWARD
+		// c7     ±N  ->  +0          BACKWARD
+		// c8     ±N  ->  -0          FORWARD
+		// c9      n  ->   n          NONDIRECTIONAL
+		// c10    +N  ->  -N          undefined
+		// c11    -N  ->  +N          undefined
+		// c12     m  ->   n          FORWARD
+		// c13     n  ->   n          BACKWARD
+		zeroEndEdge = (endEdge === 0);
 		if (startEdge === 0) {
-			if (1 / value > 0) {return 1;} // (+0 -> ±0 | ±N)
-			// startEdge is -0
-			if (endEdge === 0) {
-				if (1 / value < 0) {return 1;} // (-0 -> -0)
-			}
-			return -1; // (-0 -> +0 | ±N)
+			endSignValue = 1 / endEdge;
+			return (1 / startEdge > 0) ?
+				( (zeroEndEdge && (endSignValue > 0)) ? NONDIRECTIONAL : FORWARD ) : // c1,c2,c3
+				( (zeroEndEdge && (endSignValue < 0)) ? NONDIRECTIONAL : BACKWARD ); // c4,c5,c6
 		}
-		if (endEdge === 0) {return (1 / value > 0) ? -1 : 1;} // (±N -> +0) and (±N -> -0)
-		// direction is undefined if the edges are of opposite sign
-		if ((startEdge > 0) !== (endEdge > 0)) {return undefined;}
-		return (startEdge <= endEdge) ? 1 : -1;
+		if (zeroEndEdge) {
+			endSignValue = 1 / endEdge;
+			return (endSignValue > 0) ? BACKWARD : FORWARD; // c7,c8
+		}
+		if (startEdge === endEdge) {return NONDIRECTIONAL;} // c9
+		if ((startEdge > 0) !== (endEdge > 0)) {return undefined;} // c10,c11
+		return (startEdge < endEdge) ? FORWARD : BACKWARD; // c12,c13
 	};
 	
 	var _newSpan = function (declaredDirection, startEdge_, endEdge__, wrapIfNecessary__) {
-		var startEdge, endEdge, wraps, basicDirection;
+		var startEdge, endEdge, wraps, impliedDirection, direction;
 		if (_isNumber(endEdge__)) {
 			startEdge = startEdge_;
 			endEdge = endEdge__;
 			wraps = wrapIfNecessary__ || false;
 		} else {
-			startEdge = startEdge_ || 0;
+			startEdge = _isNumber(startEdge_) ? startEdge_ : 0;
 			endEdge = startEdge;
 			wraps = endEdge__ || false;
 		}
 		impliedDirection = _impliedDirectionFrom(startEdge, endEdge);
-		if (impliedDirection && startEdge === endEdge) {
-			direction = declaredDirection || FORWARD;
-			return new Span(direction, startEdge, endEdge, wraps);
-			// Note: If edges are 0 and -0, further checks below need to be done. 
-			// Fortunately, checking if basicDirection is undefined preventing this early out.
-		}
 		if (declaredDirection) {
-			if (wraps) {
-				// No need for wraps = true, if it is impossible for the span to wrap 
-				wraps = (impliedDirection !== declaredDirection);
-				// Note: wraps is never true if declaredDirection = undefined.
-			} else {
-				// Nonwrapping spans have endEdge clamped to startEdge if unreachable.
-				if (impliedDirection * declaredDirection === -1) {endEdge = startEdge;}
-				// declared implied action comment
-				//    1       1      none   ok. the edge match the direction of the span
-				//    1      -1      clamp  endEdge will never be reached, so clamp it
-				//    1       ?      none   keep and clamp later at normalization, if necessary
-			}
 			direction = declaredDirection;
+			if (impliedDirection) { // is FORWARD or BACKWARD (not NONDIRECTIONAL or undefined)
+				if (wraps) {
+					// No need for wraps to be true, if it is impossible for the span to wrap 
+					wraps = (impliedDirection !== declaredDirection);
+					
+				// declared implied action comment
+				//   FWD     FWD     none   Ok. the edge match the direction of the span
+				//   FWD     BWD     clamp  The endEdge will never be reached, so clamp it
+				//   FWD     NONDIR  none   The span itself is an edge, so it already "clamped"
+				//   FWD     UDEF    delay  Keep and clamp later at normalization, if necessary
+				} else if (impliedDirection * declaredDirection === -1) { // if opposite directions
+					// Nonwrapping spans have endEdge clamped to startEdge if unreachable.
+					endEdge = startEdge;
+					impliedDirection = NONDIRECTIONAL;
+				}
+			}
 		} else {
 			direction = impliedDirection;
 		}
-		return new Span(direction, startEdge, endEdge, wraps);
+		return new Span(direction, impliedDirection, startEdge, endEdge, wraps);
 	};
 		
 	// This method is a convenience for performance
 	var _newEdgeSpan = function (direction, edgeValue_, wraps__) {
-		var edgeValue = edgeValue || 0;
+		var edgeValue = _isNumber(edgeValue_) ? edgeValue_ : 0;
 		var wraps = wraps__ || false;
-		return new Span(direction, edgeValue, edgeValue, wraps);
+		return new Span(direction, NONDIRECTIONAL, edgeValue, edgeValue, wraps);
 	};
 
 	var edge = function (edgeValue) {
-		return _newEdgeSpan(FORWARD, edgeValue, false);
+		return _newEdgeSpan(NONDIRECTIONAL, edgeValue, false);
 	};
 
 	var span = function basicSpan(startEdge_, endEdge__, directionSign___, wrapIfNecessary____) {
 		return (arguments.length === 0) ? 
-			_theDefaultSpan : (directionSign___, startEdge_, endEdge_, wrapIfNecessary____);
+			_theDefaultSpan : 
+			_newSpan(directionSign___, startEdge_, endEdge__, wrapIfNecessary____);
 	};
 
 	var inc = function (startEdge_, endEdge__, wrapIfNecessary__) {
 		return (arguments.length <= 1) ?
-			_newEdgeSpan(FORWARD, startEdge_, wrapIfNecessary__) : 
+			_newEdgeSpan(FORWARD, startEdge_, false) : 
 			_newSpan(FORWARD, startEdge_, endEdge__, wrapIfNecessary__);
 	};
 
 	var dec = function (startEdge_, endEdge__, wrapIfNecessary__) {
 		return (arguments.length <= 1) ?
-			_newEdgeSpan(BACKWARD, startEdge_, wrapIfNecessary__) : 
+			_newEdgeSpan(BACKWARD, startEdge_, false) : 
 			_newSpan(BACKWARD, startEdge_, endEdge__, wrapIfNecessary__);
 	};
 		
 	var basic = function basicSpan(startEdge_, endEdge__) {
-		return _newSpan(undefined, startEdge_, endEdge__, false);
+		return span.apply(null, arguments);
 	};
 
 	var _isSpan = function () {return true;};
@@ -148,8 +162,9 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		var thisStart = this.start, thisEnd = this.end; 
 		var thatStart = that.start, thatEnd = that.end; 
 		return (this === that) ||
-			(_equalValues(thisStart, thatStart) && (_equalValues(thisEnd, thatEnd)) &&
-			(this.direction === that.direction) && (this.wraps === that.wraps));
+			((this.direction === that.direction) && (this.wraps === that.wraps) &&
+			(this.impliedDirection === that.impliedDirection) &&
+			_equalValues(thisStart, thatStart) && _equalValues(thisEnd, thatEnd));
 	};
 	
 	Span_prototype.size = function () {
@@ -160,69 +175,72 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	
 	Span_prototype.asNormalizedFor = function (measure, outOfBoundsAction_) {
 		var size = _isNumber(measure) ? measure : measure.size(),
-			newSpan, needsNewSpan, 
-			problems = {}, outOfRange,
+			normalizeSpan, needsNewSpan, 
+			problems = {}, outOfBounds,
 			upperEdge = size, lowerEdge = -upperEdge,
 			start = this.start, end = this.end, 
-			wraps = this.wraps, direction = this.direction,
-			newStart, newEnd, linearStart, linearEnd,
-			notWrapping = !wraps, isEdgeSpan = (start === end);
+			wraps = this.wraps, nonwrapping = !wraps,
+			direction = this.direction, observedDirection,
+			impliedDirection = this.impliedDirection,
+			newStart, newEnd, normalizedStart, normalizedEnd;
 	
 		if (needsNewSpan = (_signValue(start) < 0)) {
-			linearStart = start + size;
+			normalizedStart = start + size;
 			if (start < lowerEdge) {
 				problems.start = (outOfBounds = PRESPAN);
-				if (notWrapping && (isEdgeSpan || direction < 0)) {newStart = newEnd = start;} 
-				else {newStart = 0;}
-			} else {
-				newStart = linearStart;
-			}
+				if (nonwrapping && impliedDirection <= NONDIRECTIONAL) {
+					newStart = newEnd = start; // BACKWARD || NONDIRECTIONAL
+				} else {newStart = 0;}         // FORWARD || undefined
+			} else {newStart = normalizedStart;}
 		} else {
-			linearStart = start;
+			normalizedStart = start;
 			if (needsNewSpan = (start > upperEdge)) {
 				problems.start = (outOfBounds = POSTSPAN);
-				if (notWrapping && (isEdgeSpan || direction > 0)) {newStart = newEnd = start;} 
-				else {newStart = size;} 
-			} else {
-				newStart = start;
-			}
-		}
-		if (isEdgeSpan) {newEnd = newStart;}
+				if (nonwrapping && impliedDirection >= NONDIRECTIONAL) {
+					newStart = newEnd = start; // FORWARD || NONDIRECTIONAL
+				} else {newStart = size;}      // BACKWARD || undefined
+			} else {newStart = normalizedStart;}
+		} 
+		if (start === end) {newEnd = newStart;}
 		if (newEnd !== undefined) {
-			newSpan = (newEnd === end) ? this : new Span(direction, newStart, newEnd, false);
+			normalizeSpan = (newEnd === end) ? 
+				this : new Span(direction, NONDIRECTIONAL, newStart, newEnd, wraps);
 		} else {
+			// From this point forward, impliedDirection cannot be NONDIRECTIONAL.
 			if (needsNewSpan = (_signValue(end) < 0)) {
-				linearEnd = end + size;
+				normalizedEnd = end + size;
 				if (end < lowerEdge) {
 					problems.end = (outOfBounds = PRESPAN);
-					if (notWrapping && direction > 0) {newStart = newEnd = end;}
-					else {newEnd = 0;} 
-				} else {
-					newEnd = linearEnd;
-				}
+					if (nonwrapping && impliedDirection === FORWARD) {newStart = newEnd = end;}
+					else {newEnd = 0;} // BACKWARD || undefined
+				} else {newEnd = normalizedEnd;}
 			} else {
-				linearEnd = end;
+				newEnd = normalizedEnd = end;
 				if (needsNewSpan = (end > upperEdge)) {
 					problems.end = (outOfBounds = POSTSPAN);
-					if (notWrapping && direction < 0) {newStart = newEnd = end;}
-					else {newEnd = size;}
-				} else {
-					newEnd = end;
+					if (nonwrapping && impliedDirection === BACKWARD) {newStart = newEnd = end;}
+					else {newEnd = size;} // FORWARD || undefined
+				} else {newEnd = normalizedEnd;}
+			}
+			if (impliedDirection) {observedDirection = impliedDirection;}
+			else { // impliedDirection === undefined
+				// Note: needsNewSpan is implicitly set since an undefined impliedDirection 
+				// is only possible when one edge is negative, and the other positive.
+				observedDirection = (normalizedStart === normalizedEnd) ? 
+					NONDIRECTIONAL : ((normalizedStart < normalizedEnd) ? FORWARD : BACKWARD);
+				if (wraps) {wraps = (observedDirection !== direction);} 
+				else {
+					if (direction === undefined) {direction = observedDirection;}
+					else if (observedDirection !== direction) { // if opposite directions
+						newEnd = newStart;
+						observedDirection = NONDIRECTIONAL;
+					}
 				}
 			}
-			if (notWrapping) {
-				
-			}
-			if (needsNewSpan) {
-				if (direction === undefined) {
-					direction = (linearEnd - linearStart) >= 0 ? FORWARD : BACKWARD;
-				}
-				newSpan = new Span(direction, newStart, newEnd, wraps);
-			} else {
-				newSpan = this;
-			}
+			normalizeSpan = (needsNewSpan) ? 
+				new Span(direction, observedDirection, newStart, newEnd, wraps) : this;
 		}
 		return (outOfBounds && outOfBoundsAction_) ? 
-			outOfBoundsAction_(newSpan, problems) : newSpan;
+			outOfBoundsAction_(normalizeSpan, problems, this) : normalizeSpan;
 	};
-});	
+});

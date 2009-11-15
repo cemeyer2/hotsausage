@@ -127,7 +127,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		return removed1;
 	};
 	
-	var __wrapReplace = function (list, replacements, normalizedSpan, isReversed) {
+	var __wrapReplaceAll = function (list, replacements, normalizedSpan, isReversed) {
 		var size = list.size(),
 			replacementsSize = replacements.length,
 			start = normalizedSpan.start,
@@ -154,7 +154,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		var isReversed = normalizedSpan.direction < 0,
 			reverse, removed;       
 		if (normalizedSpan.wraps) {
-			return __wrapReplace(list, replacements, normalizedSpan, isReversed);
+			return __wrapReplaceAll(list, replacements, normalizedSpan, isReversed);
 		}  
 		if (isReversed) {
 			reverse = replacements.slice().reverse();

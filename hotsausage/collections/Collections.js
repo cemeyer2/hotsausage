@@ -13,5 +13,6 @@ HotSausage.newSubmodule("Collections", function (Collections, _Collections_HS) {
 		if (numberA !== 0) {return true;}
 		return (1 / numberA) === (1 / numberB )
 	};
-
+	
+	Collections.equalValues = _Collections_HS.equalValues;
 });
