@@ -10,6 +10,7 @@
 /*jslint undef: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
 
 (function () {
+	var undefined;
 	var UNDEFINED = 'undefined';
 	var STRING = 'string';
 	var BOOLEAN = 'boolean';

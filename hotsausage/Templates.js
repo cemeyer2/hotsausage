@@ -4,6 +4,7 @@
 
 HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	// var HS = Templates.module();
+	var undefined;
 	var _newObject = _Templates_HS.newObject;
 	var _hasLocalPublicProperty = _Templates_HS.hasLocalPublicProperty;
 	var _handleError = _Templates_HS.handleError;

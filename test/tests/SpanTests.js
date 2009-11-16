@@ -70,8 +70,21 @@ describe('Span test suite', function () {
 			
 			it('should be able to set the direction of spans beginning or ending with 0/-0', function () {
 				_checkSpanProperties( Span.basic(0, 0), false, 0, 0, NON );		
-				_checkSpanProperties( Span.basic(0, 0), false, 0, 0, NON );		
-				_checkSpanProperties( Span.basic(0, 0), false, 0, 0, NON );				
+				_checkSpanProperties( Span.basic(0, -0), false, 0, -0, FWD );		
+				_checkSpanProperties( Span.basic(0, 3), false, 0, 3, FWD );	
+				_checkSpanProperties( Span.basic(0, -3), false, 0, -3, FWD );	
+				_checkSpanProperties( Span.basic(-0, -0), false, -0, -0, NON );			
+				_checkSpanProperties( Span.basic(-0, 0), false, -0, 0, BWD );
+				_checkSpanProperties( Span.basic(-0, 3), false, -0, 3, BWD );
+				_checkSpanProperties( Span.basic(-0, -3), false, -0, -3, BWD );
+				_checkSpanProperties( Span.basic(3, 0), false, 3, 0, BWD );
+				_checkSpanProperties( Span.basic(-3, 0), false, -3, 0, BWD );
+				_checkSpanProperties( Span.basic(3, 0), false, 3, 0, BWD );
+			});
+			
+			it('should be of undefined direction when the args are of opposite sign, but non-zero', function () {
+				_checkSpanProperties( Span.basic(5, -3), false, 5, -3, undefined );		
+				_checkSpanProperties( Span.basic(-5, 3), false, -5, 3, undefined );		
 			});
 		});
 	});
@@ -98,6 +111,66 @@ describe('Span test suite', function () {
 			
 			it('using -0 should be different from using 0', function () {
 				expect( Span.inc(-0).isSameAs( Span.inc(0) )).toBe( false );
+			});
+		});
+		
+		describe('When using 2 edge params', function () {
+			it('should be forward implied direction when increasing', function () {
+				_checkSpanProperties( Span.inc(5, 7), false, 5, 7, FWD, FWD );
+				_checkSpanProperties( Span.inc(-100, -1), false, -100, -1, FWD, FWD );
+			});
+			
+			it('should be backward implied direction when decreasing', function () {
+				_checkSpanProperties( Span.inc(10, 3), false, 10, 3, FWD, BWD );
+				_checkSpanProperties( Span.inc(-12, -20), false, -12, -20, FWD, BWD );				
+			});
+			
+			it('should be implied nondirectional when the args are the exactly the same', function () {
+				_checkSpanProperties( Span.inc(10, 10), false, 10, 10, FWD, NON );
+				_checkSpanProperties( Span.inc(0, 0), false, 0, 0, FWD, NON );
+				_checkSpanProperties( Span.inc(-3, -3), false, -3, -3, FWD, NON );
+			});
+			
+			it('should be of undefined direction when the args are of opposite sign, but non-zero', function () {
+				_checkSpanProperties( Span.inc(5, -3), false, 5, -3, FWD, undefined );		
+				_checkSpanProperties( Span.inc(-5, 3), false, -5, 3, FWD, undefined );		
+			});
+		});
+		
+		describe('When using the wraps param', function () {
+			it('should be same as not using it when wraps is false', function () {
+				expect( Span.inc(5, false).isSameAs(Span.inc(5)) ).toBe( true );
+				expect( Span.inc(-0, false).isSameAs(Span.inc(-0)) ).toBe( true );
+				expect( Span.inc(5, 7, false).isSameAs(Span.inc(5, 7)) ).toBe( true );
+				expect( Span.inc(-100, -1, false).isSameAs(Span.inc(-100, -1)) ).toBe( true );
+				expect( Span.inc(-1, 1, false).isSameAs(Span.inc(-1, 1)) ).toBe( true );		
+			});
+			
+			it('should be set to true when wraps is true', function () {
+				_checkSpanProperties( Span.inc(5, 7, true), true, 5, 7, FWD, FWD );
+				_checkSpanProperties( Span.inc(-100, -1, true), true, -100, -1, FWD, FWD );
+			});
+			
+			it('should not cause clamping when implied direction is decreasing', function () {
+				_checkSpanProperties( Span.inc(10, 3, true), true, 10, 3, FWD, BWD );
+				_checkSpanProperties( Span.inc(-12, -20, true), true, -12, -20, FWD, BWD );				
+			});
+			
+			it('should be implied nondirectional when using one edge arg', function () {
+				_checkSpanProperties( Span.inc(10, true), true, 10, 10, FWD, NON );
+				_checkSpanProperties( Span.inc(0, true), true, 0, 0, FWD, NON );
+				_checkSpanProperties( Span.inc(-3, true), true, -3, -3, FWD, NON );
+			});
+			
+			it('should be implied nondirectional when the args are the exactly the same', function () {
+				_checkSpanProperties( Span.inc(10, 10, true), true, 10, 10, FWD, NON );
+				_checkSpanProperties( Span.inc(0, 0, true), true, 0, 0, FWD, NON );
+				_checkSpanProperties( Span.inc(-3, -3, true), true, -3, -3, FWD, NON );
+			});
+			
+			it('should be of undefined direction when the args are of opposite sign, but non-zero', function () {
+				_checkSpanProperties( Span.inc(5, -3, true), true, 5, -3, FWD, undefined );		
+				_checkSpanProperties( Span.inc(-5, 3, true), true, -5, 3, FWD, undefined );		
 			});
 		});
 	});

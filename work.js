@@ -12,6 +12,13 @@ CouchDB JS
 ssh://hg@bitbucket.org/m3rabb/hotsausage/
 
 
+mkdir -p /Library/Applications\ Support/TextMate/Bundles 
+cd !$
+hg clone http://mercurial.intuxication.org/hg/mercurial-tmbundle Mercurial.tmbundle
+osascript -e 'tell app "TextMate" to reload bundles'
+
+hg clone http://bitbucket.org/mazdak/textmate-mercurial-bundle/
+
 // isLocalProperty isInstanceProperty
 	
 	

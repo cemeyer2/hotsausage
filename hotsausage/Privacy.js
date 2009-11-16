@@ -17,6 +17,7 @@
 
 HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	// var HS = Privacy.module();
+	var undefined;
 	var _newObject = _Privacy_HS.newObject;
 	var _handleError = _Privacy_HS.handleError;
 	
