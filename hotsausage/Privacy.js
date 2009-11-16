@@ -83,20 +83,20 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @function
 	 * @name _newPrivilegedMethod
 	 * @inner
-	 * @param {Object} _implementor the object that this new method will be added to
+	 * @param {Object} _behavior the object that this new method will be added to
 	 * @param {String} _methodName the name of the new privileged method
 	 * @param {Function} _impFunc the implementation of the new privileged method
 	 */
-	var _newPrivilegedMethod = function (_implementor, _methodName, _impFunc) {
+	var _newPrivilegedMethod = function (_behavior, _methodName, _impFunc) {
 		return function privilegedMethod(/* arguments */) {
 			var purse, answer;
 			
 			if (_isPurse(this)) {
 				purse = this;
 			} else {
-				if (! this instanceof _implementor) {
+				if (! this instanceof _behavior.constructor) {
 					return _SabotageHandlers.onImproperMethod(
-						this, _implementor, _methodName, privilegedMethod
+						this, _behavior, _methodName, privilegedMethod
 					);
 				}
 				purse = __purseOf(this);
@@ -120,14 +120,13 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		behavior[methodName] = _newPrivilegedMethod(behavior, methodName, func);
 	};
 	
-
-	var _createProtectedAccessorFor = function (_purse) {
-		_purse._hspv = _PurseValidation;
+	var _createProtectedAccessorFor = function (_purseObject) {
+		_purseObject._hspv = _PurseValidation;
 		return function _purse(sessionKey) {
 			if (_ActiveTransporter[sessionKey] !== _CurrentSlot) {
 				return _SabotageHandlers.onImproperPurseKey(this, sessionKey);
 			}
-			_ActiveTransporter[sessionKey] = _purse;
+			_ActiveTransporter[sessionKey] = _purseObject;
 			return null;
 		};
 	};

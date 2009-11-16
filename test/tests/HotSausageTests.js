@@ -7,8 +7,10 @@ describe('HotSausage test suite', function () {
 			// expect(HotSausage.currentSubmodules().length).toBe(0);
 			expect(HotSausage.newSubmodule).toBeDefined();
 		});
+	});
+});
 		
-		it('should be able to replace the name of the base "HotSausage" module', function () {
+/*		it('should be able to replace the name of the base "HotSausage" module', function () {
 			var bmn, hs = HotSausage;
 			HotSausage.renameAs("BetterModuleName");
 			expect(window.HotSausage).toBe(undefined);
@@ -17,7 +19,7 @@ describe('HotSausage test suite', function () {
 			expect(bmn.name()).toBe("BetterModuleName");
 		});
 	});
-/*	
+	
 	describe('when making a new submodule', function () {
 		var mine, hierarchicalPurse;
 		var submodule = HotSausage.newSubmodule("Mine", function (Mine, _Mine_HS) {
@@ -32,7 +34,6 @@ describe('HotSausage test suite', function () {
 		});
 	});
 */		
-});
 
 
 /*
