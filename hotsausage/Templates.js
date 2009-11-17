@@ -23,32 +23,32 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	
 	var __putMethod = function (target, targetBD, methodName, method) {
 		target[methodName] = method;
-		targetBD.methods[methodName] = method;
-		return (targetBD.methodCount += 1);
+		targetBD._methods[methodName] = method;
+		return (targetBD._methodCount += 1);
 	};
 
 	var __deleteMethod = function (target, targetBD, methodName) {
-		if (methodName in targetBD.methods) {
+		if (methodName in targetBD._methods) {
 			delete target[methodName];
-			delete targetBD.methods[methodName];
-			return (targetBD.methodCount -= 1);
+			delete targetBD._methods[methodName];
+			return (targetBD._methodCount -= 1);
 		}
-		return targetBD.methodCount;
+		return targetBD._methodCount;
 	};
 	
 	var __ensureMethodDictionary = function (targetBD) {
-		if (targetBD.methods) {return;}
-		targetBD.methods = _newObject();
-		targetBD.methodCount = 0;
+		if (targetBD._methods) {return;}
+		targetBD._methods = _newObject();
+		targetBD._methodCount = 0;
 	};
 
 	var __deleteMethodDictionary = function (targetBD) {
-		delete targetBD.methods;
-		delete targetBD.methodCount;
+		delete targetBD._methods;
+		delete targetBD._methodCount;
 	};
 	
 	var __copyMethodDictionary = function (target, targetBD, sourceBD) {
-		var methods = sourceBD.methods;
+		var methods = sourceBD._methods;
 		var methodName;
 		if (methods === undefined) {return;}
 		for (methodName in methods) {
@@ -57,7 +57,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 	
 	var __copyMethods = function (target, targetBD, sourceInstanceBD, sourceTemplateBD) {
-		var snapshotBD = sourceInstanceBD.delegateBD;
+		var snapshotBD = sourceInstanceBD._delegateBD;
 		if (snapshotBD !== sourceTemplateBD) {
 			__copyMethodDictionary(target, targetBD, snapshotBD);
 		}
@@ -65,26 +65,26 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 
 	var __setInstanceId = function (instanceBD) {
-		var templateBD = instanceBD.templateBD;
-		instanceBD.instanceId = (templateBD.instanceCount += 1);
+		var templateBD = instanceBD._templateBD;
+		instanceBD._instanceId = (templateBD._instanceCount += 1);
 	};
 	
 	var __setSnapshotId = function (instanceBD) {
-		var templateBD = instanceBD.templateBD;
-		instanceBD.snapshotId = (templateBD.snapshotCount += 1);
+		var templateBD = instanceBD._templateBD;
+		instanceBD._snapshotId = (templateBD._snapshotCount += 1);
 	};
 			
 	var __attachPurse = function (target, targetBD) {
 		var purse = _newObject(target);
-		purse.owner = target;
-		purse._hsbd = targetBD;
+		purse._owner = target;
+		purse.__hsbd = targetBD;
 		target._purse = _createPurseAccessor(purse);
 		return purse;
 	};
 
 	var __attachMethod_blankCopy = function (behavior, behavioralData) {
-		var _InstanceObject = behavioralData.InstanceObject;
-		var _BehavioralDataObject = behavioralData.BehavioralDataObject;
+		var _InstanceObject = behavioralData._InstanceObject;
+		var _BehavioralDataObject = behavioralData._BehavioralDataObject;
 		__putMethod(behavior, behavioralData, BLANK_COPY, function blankCopy(/* arguments */) {
 			var instance = new _InstanceObject();
 			var instanceBD = new _BehavioralDataObject();
@@ -101,25 +101,25 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		InstanceObject.prototype = behavior;
 		BehavioralDataObject.prototype = sharedBD; 
 		behavioralData = new BehavioralDataObject();
-		behavioralData.InstanceObject = InstanceObject;
-		behavioralData.BehavioralDataObject = BehavioralDataObject;
+		behavioralData._InstanceObject = InstanceObject;
+		behavioralData._BehavioralDataObject = BehavioralDataObject;
 		return behavioralData;
 	};
 	
 	var _newBehaviorSnapshotFrom = function (sourceInstance) {
-		var sourceInstanceBD = _purseOf(sourceInstance)._hsbd;
-		var sourceTemplateBD = sourceInstanceBD.templateBD;
+		var sourceInstanceBD = _purseOf(sourceInstance).__hsbd;
+		var sourceTemplateBD = sourceInstanceBD._templateBD;
 
-		var snapshot = new sourceTemplateBD.InstanceObject();
-		var sharedBD = new sourceTemplateBD.BehavioralDataObject();
+		var snapshot = new sourceTemplateBD._InstanceObject();
+		var sharedBD = new sourceTemplateBD._BehavioralDataObject();
 		var snapshotBD = __newBehavioralData(snapshot, sharedBD);
 		
 		__ensureMethodDictionary(snapshotBD);
 		__attachMethod_blankCopy(snapshot, snapshotBD);
 		__copyMethods(snapshot, snapshotBD, sourceInstanceBD, sourceTemplateBD);
 		
-		sharedBD.snapshotId = sourceInstanceBD.snapshotId;
-		sharedBD.delegateBD = snapshotBD;
+		sharedBD._snapshotId = sourceInstanceBD._snapshotId;
+		sharedBD._delegateBD = snapshotBD;
 		return snapshot;
 	};
 	
@@ -133,7 +133,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	var _hasIdenticalImplementation = function (method, impFunc, isDelegatingMethod_) {
 		if (method == impFunc) {return true;}  // Intentionally used == instead of ===
 		if (isDelegatingMethod_ && method !== undefined) {
-			return _purseOf(method).implementation === impFunc;
+			return _purseOf(method)._implementation === impFunc;
 		}
 		return false;
 	};
@@ -142,7 +142,7 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		return function trampoline(/* arguments */) {
 			var purse = _purseOf(this);
 			var answer = _impFunc.apply(purse, arguments);
-			return (answer === purse) ? purse.owner : answer;
+			return (answer === purse) ? purse._owner : answer;
 		};
 	};
 	// HS.Privacy should replace this method with the following
@@ -153,22 +153,22 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	var _asDelegatingMethod = function (implementor, name, impFunc) {
 		var method = _newDelegatingMethod(implementor, name, impFunc);
 		var purse = __attachPurse(method, null);
-		purse.implementation = impFunc;
-		purse.methodName = name;
+		purse._implementation = impFunc;
+		purse._methodName = name;
 		return method;
 	};
 	
 	var _setMethod = function (target, methodName, impFunc, isDelegating_) {
-		var targetBD = _purseOf(target)._hsbd;
-		var delegateBD = targetBD.delegateBD;
+		var targetBD = _purseOf(target).__hsbd;
+		var delegateBD = targetBD._delegateBD;
 		var localMethodCount, method;
 		
-		if (_hasIdenticalImplementation(delegateBD.methods[methodName], impFunc, isDelegating_)) {
+		if (_hasIdenticalImplementation(delegateBD._methods[methodName], impFunc, isDelegating_)) {
 			localMethodCount = __deleteMethod(target, targetBD, methodName);
 			if (localMethodCount <= 0) {__deleteMethodDictionary(targetBD);}
 			return;
 		}
-		if (targetBD.templateBD === targetBD || target.blankCopy === _deferred_blankCopy) {
+		if (targetBD._templateBD === targetBD || target.blankCopy === _deferred_blankCopy) {
 			// target is template or has local methods but no copies yet
 		} else {
 			// target is either adding its first local method, or has already spawned 
@@ -216,14 +216,14 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 	
 	var _newTemplate = function (sourceInstance, name, targetModule_) {
-		var sourceInstanceBD = _purseOf(sourceInstance)._hsbd;
-		var sourceTemplateBD = sourceInstanceBD.templateBD;
+		var sourceInstanceBD = _purseOf(sourceInstance).__hsbd;
+		var sourceTemplateBD = sourceInstanceBD._templateBD;
 
-		var templatePrototype = new sourceTemplateBD.InstanceObject();
+		var templatePrototype = new sourceTemplateBD._InstanceObject();
 		var template = _newObject(templatePrototype);
 		var factoryMethod = _newSafeDualUseConstructor(template, templatePrototype);
 
-		var sharedBD = new sourceTemplateBD.BehavioralDataObject();
+		var sharedBD = new sourceTemplateBD._BehavioralDataObject();
 		var templateBD = __newBehavioralData(template, sharedBD);
 		
 		__attachPurse(template, templateBD);
@@ -232,35 +232,35 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		if (sourceInstanceBD !== sourceTemplateBD) {
 			__copyMethods(template, templateBD, sourceInstanceBD, sourceTemplateBD);
 		}
-		sharedBD.snapshotId = 0;
-		sharedBD.delegateBD = templateBD;
-		sharedBD.templateBD = templateBD;	
-		sharedBD.template = template;
+		sharedBD._snapshotId = 0;
+		sharedBD._delegateBD = templateBD;
+		sharedBD._templateBD = templateBD;	
+		sharedBD._template = template;
 		
-		templateBD.basicName = name;
-		templateBD.instanceCount = 0;
-		templateBD.snapshotCount = 0;
-		templateBD.template = sourceInstanceBD.template;
-		templateBD.delegateBD = sourceTemplateBD;
+		templateBD._basicName = name;
+		templateBD._instanceCount = 0;
+		templateBD._snapshotCount = 0;
+		templateBD._template = sourceInstanceBD._template;
+		templateBD._delegateBD = sourceTemplateBD;
 
 		_attachFactoryMethod(name, factoryMethod, targetModule_);
 		return template;
 	};
 	
 	var __bdBasicName = function (targetBD) {
-		var templateBD = targetBD.templateBD;
-		var name = templateBD.basicName;
+		var templateBD = targetBD._templateBD;
+		var name = templateBD._basicName;
 		var instanceId, snapshotId, snapshotText;
 		if (targetBD === templateBD) {return name;}
-		instanceId = targetBD.instanceId;
-		snapshotId = targetBD.snapshotId;
+		instanceId = targetBD._instanceId;
+		snapshotId = targetBD._snapshotId;
 		snapshotText = snapshotId ? ":s" + snapshotId : "";
 		if (instanceId === undefined) {return ["_", name, snapshotText].join("");}
 		return [name.charAt(0).toLowerCase(), name.slice(1), instanceId, snapshotText].join("");
 	};
 
 	var _basicName = function (target) {
-		return __bdBasicName(_purseOf(target)._hsbd);
+		return __bdBasicName(_purseOf(target).__hsbd);
 	};
 	
 	var _copyPurseFromTo = function (sourceInstance, targetInstance) {
@@ -297,12 +297,12 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	};
 	
 	var _template = function (target) {
-		return _purseOf(target)._hsbd.template;
+		return _purseOf(target).__hsbd._template;
 	};
 
 	var _isTemplate = function (target) {
-		var targetBD = _purseOf(target)._hsbd;
-		return targetBD.templateBD === targetBD;
+		var targetBD = _purseOf(target).__hsbd;
+		return targetBD._templateBD === targetBD;
 	};
 
 	var templateInstance0 = (function bootstrap() {
@@ -310,9 +310,9 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 		var bootstrapBD = __newBehavioralData(Object.prototype, null);
 		__attachPurse(bootstrapInstance, bootstrapBD);
 		__ensureMethodDictionary(bootstrapBD);
-		bootstrapBD.templateBD = bootstrapBD;
-		bootstrapBD.template = null;
-		bootstrapBD.basicName = "_NULL_";
+		bootstrapBD._templateBD = bootstrapBD;
+		bootstrapBD._template = null;
+		bootstrapBD._basicName = "_NULL_";
 		// This function is very similar to _newTemplate but the 
 		// following functions and properties are not needed:
 		//    __attachMethod_blankCopy(), __copyMethods()
@@ -369,20 +369,21 @@ HotSausage.newSubmodule("Templates", function (Templates, _Templates_HS) {
 	templateInstance0.basicMethod("basicName", function () {return _basicName(this);});
 	
 	templateInstance0.method("name", function () {
-		return _hasLocalProperty(this, name) ? this.name : this.basicName();
+		var name = this._name;
+		return name ? name : this.basicName();
 	});
 
-	templateInstance0.method("setName", function (name) {this.name = name;});
+	templateInstance0.method("setName", function (name) {this._name = name;});
 	
 	templateInstance0.basicMethod("basicType", templateInstance0.basicName);
 	
 	templateInstance0.method("type", function () {
 		// This method can be overridden.
-		var type = this.type;
+		var type = this._type;
 		return type ? type : this.basicType();
 	});
 
-	templateInstance0.method("setType", function (type) {this.type = type;});	
+	templateInstance0.method("setType", function (type) {this._type = type;});	
 	
 	templateInstance0.basicMethod("copyAsTemplate", function (templateName, targetModule_) {
 		return _newTemplate(this, templateName, targetModule_);

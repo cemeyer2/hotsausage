@@ -24,11 +24,11 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	//  if the startEdge > endEdge it is nonwrapping, 
 	//  if the startEdge <= endEdge it is wrapping
 	var Span = function (direction, impliedDirection, startEdge, endEdge, wraps) {
-		this.direction = direction;
-		this.impliedDirection = impliedDirection;
-		this.start = startEdge;
-		this.end = endEdge;
-		this.wraps = wraps;
+		this._direction = direction;
+		this._impliedDirection = impliedDirection;
+		this._start = startEdge;
+		this._end = endEdge;
+		this._wraps = wraps;
 		// this.wrapIfNecessary = wrapIfNecessary_;
 	};
 	
@@ -139,20 +139,22 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	Span_prototype.isSpan = _isSpan;
 	
 	Span_prototype.isSameAs = function (that) {
-		var thisStart = this.start, thisEnd = this.end; 
-		var thatStart = that.start, thatEnd = that.end; 
+		var thisStart = this._start, thisEnd = this._end; 
+		var thatStart = that._start, thatEnd = that._end; 
 		return (this === that) ||
-			((this.direction === that.direction) && (this.wraps === that.wraps) &&
-			(this.impliedDirection === that.impliedDirection) &&
+			((this._direction === that._direction) && (this._wraps === that._wraps) &&
+			(this._impliedDirection === that._impliedDirection) &&
 			_equalValues(thisStart, thatStart) && _equalValues(thisEnd, thatEnd));
 	};
 	
 	Span_prototype.size = function () {
-		var direction = this.direction;
-		if (direction === UNDEFINED || this.wraps) {return undefined;}
-		if (_signValue(this.start) !== _signValue(this.end)) {return undefined;}
-		if (direction * this.impliedDirection === -1) {return 0;}
-		return this.direction * (this.end - this.start);
+		var direction = this._direction;
+		var start = this._start;
+		var end = this._end;
+		if (direction === UNDEFINED || this._wraps) {return undefined;}
+		if (_signValue(start) !== _signValue(end)) {return undefined;}
+		if (direction * this._impliedDirection === -1) {return 0;}
+		return direction * (end - start);
 	};
 	
 	Span_prototype.asNormalizedFor = function (measure, outOfBoundsAction_) {
@@ -160,16 +162,16 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 			normalizeSpan, modifications = 2, 
 			problems = {}, outOfBounds,
 			upperEdge = size, lowerEdge = -upperEdge,
-			start = this.start, end = this.end, 
-			wraps = this.wraps, nonwrapping = !wraps,
-			direction = this.direction, observedDirection,
-			impliedDirection = this.impliedDirection,
+			start = this._start, end = this._end, 
+			wraps = this._wraps, nonwrapping = !wraps,
+			direction = this._direction, observedDirection,
+			impliedDirection = this._impliedDirection,
 			newStart, newEnd, normalizedStart, normalizedEnd;
 	
 		if (_signValue(start) < 0) {
 			normalizedStart = start + size;
 			if (start < lowerEdge) {
-				problems.start = (outOfBounds = PRESPAN);
+				problems._start = (outOfBounds = PRESPAN);
 				if (nonwrapping && impliedDirection <= EDGE) {
 					newStart = newEnd = start; // BWD || EDGE
 				} else {newStart = 0;}         // FWD || UND
@@ -177,7 +179,7 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 		} else {
 			normalizedStart = start;
 			if (start > upperEdge) {
-				problems.start = (outOfBounds = POSTSPAN);
+				problems._start = (outOfBounds = POSTSPAN);
 				if (nonwrapping && impliedDirection >= EDGE) {
 					newStart = newEnd = start; // FWD || EDGE
 				} else {newStart = size;}      // BWD || UND
@@ -195,14 +197,14 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 			if (_signValue(end) < 0) {
 				normalizedEnd = end + size;
 				if (end < lowerEdge) {
-					problems.end = (outOfBounds = PRESPAN);
+					problems._end = (outOfBounds = PRESPAN);
 					if (nonwrapping && impliedDirection === FWD) {newStart = newEnd = end;}
 					else {newEnd = 0;} // BWD || UND
 				} else {newEnd = normalizedEnd;}
 			} else {
 				newEnd = normalizedEnd = end;
 				if (end > upperEdge) {
-					problems.end = (outOfBounds = POSTSPAN);
+					problems._end = (outOfBounds = POSTSPAN);
 					if (nonwrapping && impliedDirection === BWD) {newStart = newEnd = end;}
 					else {newEnd = size;} // FWD || UND
 				} else {
