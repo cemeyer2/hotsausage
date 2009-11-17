@@ -4,6 +4,7 @@ describe('Span test suite', function () {
 	var FWD = 1;
 	var NON = 0;
 	var BWD = -1;
+	var UND = undefined;
 	
 	var _checkSpanProperties = function (span, wraps, start, end, direction, impliedDirection_) {
 		var impliedDirection = (arguments.length === 5) ? direction : impliedDirection_;
@@ -83,8 +84,8 @@ describe('Span test suite', function () {
 			});
 			
 			it('should be of undefined direction when the args are of opposite sign, but non-zero', function () {
-				_checkSpanProperties( Span.basic(5, -3), false, 5, -3, undefined );		
-				_checkSpanProperties( Span.basic(-5, 3), false, -5, 3, undefined );		
+				_checkSpanProperties( Span.basic(5, -3), false, 5, -3, UND );		
+				_checkSpanProperties( Span.basic(-5, 3), false, -5, 3, UND );		
 			});
 		});
 	});
@@ -132,8 +133,8 @@ describe('Span test suite', function () {
 			});
 			
 			it('should be of undefined direction when the args are of opposite sign, but non-zero', function () {
-				_checkSpanProperties( Span.inc(5, -3), false, 5, -3, FWD, undefined );		
-				_checkSpanProperties( Span.inc(-5, 3), false, -5, 3, FWD, undefined );		
+				_checkSpanProperties( Span.inc(5, -3), false, 5, -3, FWD, UND );		
+				_checkSpanProperties( Span.inc(-5, 3), false, -5, 3, FWD, UND );		
 			});
 		});
 		
@@ -169,98 +170,71 @@ describe('Span test suite', function () {
 			});
 			
 			it('should be of undefined direction when the args are of opposite sign, but non-zero', function () {
-				_checkSpanProperties( Span.inc(5, -3, true), true, 5, -3, FWD, undefined );		
-				_checkSpanProperties( Span.inc(-5, 3, true), true, -5, 3, FWD, undefined );		
+				_checkSpanProperties( Span.inc(5, -3, true), true, 5, -3, FWD, UND );		
+				_checkSpanProperties( Span.inc(-5, 3, true), true, -5, 3, FWD, UND );		
 			});
 		});
 	});
-});
 
-/*	
-	describe('When creating a incrementing span', function () { 
-		describe('When using 0 params', function () {
-			it('should answer a new incrementing nonwrapping 0 edge span', function () {
-				_checkSpanProperties( Span.inc(), 0, 0, 1, false );
-				_checkSpanProperties( Span.dec(), 0, 0, -1, false );			
-			};
-		};
+	// ADD TESTS FOR THIS!!! -->> describe('When creating an decrementing span', function () {});
+	
+	describe('When getting the size of a span', function () {
+		it('should answer 0 when it is a nonwrapping edge', function () {
+			expect( Span.edge(4).size() ).toBe( 0 );
+			expect( Span.basic(4).size() ).toBe( 0 );
+			expect( Span.inc(4).size() ).toBe( 0 );
+			expect( Span.dec(4).size() ).toBe( 0 );
+		});
 		
-		describe('When using 1 params', function () {
-			it('should answer a new incrementing nonwrapping edge span', function () {
-				_checkSpanProperties( Span.inc(-5), -5, -5, 1, false );
-				_checkSpanProperties( Span.inc(6), 6, 6, -1, false );						
-			};
-		};
-		
-		describe('When using 2 number params', function () {
-			describe('When params are the same sign value', function () {
-				describe('When the start <= end', function () {
-					it('should set the start and end as expected', function () {
-						_checkSpanProperties( Span.inc(1, 2), 1, 2, 1, false );
-						_checkSpanProperties( Span.inc(-3, -1), -3, -1, 1, false );	
-					
-						_checkSpanProperties( Span.inc(-0, -0), 0, 0, 1, false );
-						_checkSpanProperties( Span.inc(5, 5), 5, 5, 1, false );
-					});
-				});
-				
-				describe('When the start > end', function () {
-					it('should set the start and end as expected', function () {
-						_checkSpanProperties( Span.inc(2, 1), 2, 2, 1, false );
-						_checkSpanProperties( Span.inc(-1, -3), -1, -1, 1, false );	
-					});
-				});
-			});
-			
-			describe('When params are the same direction', function () {
-				it('should set the start and end as expected', function () {
-					_checkSpanProperties( Span.inc(1, 2), 1, 2, 1, false );
-					_checkSpanProperties( Span.inc(-3, -1), -3, -1, 1, false );	
-					
-					_checkSpanProperties( Span.inc(-0, -0), 0, 0, 1, false );
-					_checkSpanProperties( Span.inc(5, 5), 5, 5, 1, false );
-				};
-			};
-			
-			
-			it('should answer a new clamped nonwrapping span', function () {
-				_checkSpanProperties( Span.inc(1, 2), 1, 2, 1, false );
-				_checkSpanProperties( Span.inc(9, 3), 9, 9, 1, false );
-				_checkSpanProperties( Span.inc(-4, -12), -4, -4, 1, false );
-				_checkSpanProperties( Span.inc(-3, -1), -3, -1, 1, false );	
+		it('should normally answer a positive integer', function () {
+			expect( Span.inc(4, 8).size() ).toBe( 4 );
+			expect( Span.dec(8, 4).size() ).toBe( 4 );
+			expect( Span.basic(8, 4).size() ).toBe( 4 );
+			expect( Span.inc(-7, -0).size() ).toBe( 7 );
+			expect( Span(0, 0).size() ).toBe( 0 );
+		});
 
-				_checkSpanProperties( Span.dec(1, 2), 1, 1, -1, false );
-				_checkSpanProperties( Span.dec(9, 3), 9, 3, -1, false );
-				_checkSpanProperties( Span.dec(-4, -12), -4, -12, -1, false );
-				_checkSpanProperties( Span.dec(-3, -1), -3, -3, -1, false );					
-			};
-		};
-		
-		describe('When the optional wrapping param is false', function () {
-			it('should answer exactly the same as without it', function () {
-				_checkSpanProperties( Span.inc(-5), -5, -5, 1, false );
-				_checkSpanProperties( Span.dec(1), 1, 1, -1, false );
-				
-				expect( Span.inc(-5).isSameAs( Span.inc(-5, false) )).toBe(true);
-				expect( Span.dec(1).isSameAs( Span.dec(1, false) )).toBe(true);
-				
-				expect( Span.dec(1, 2).isSameAs( Span.dec(1, 2, false) )).toBe(true);
-				expect( Span.inc(1, 2).isSameAs( Span.inc(1, 2, false) )).toBe(true);
-				expect( Span.dec(1, 2).isSameAs( Span.dec(1, 2, false) )).toBe(true);
-				expect( Span.inc(1, 2).isSameAs( Span.inc(1, 2, false) )).toBe(true);
-				
-				_checkSpanProperties( Span.inc(1, 2), 1, 2, 1, false );
-				_checkSpanProperties( Span.inc(9, 3), 9, 9, 1, false );
-				_checkSpanProperties( Span.inc(-4, -12), -4, -4, 1, false );
-				_checkSpanProperties( Span.inc(-3, -1), -3, -1, 1, false );	
+		it('should answer 0 if the impliedDirection is opposite the direction', function () {
+			expect( Span.dec(-7, -0).size() ).toBe( 0 );
+			expect( Span(10, 4, FWD).size() ).toBe( 0 );
+		});
 
-				_checkSpanProperties( Span.dec(1, 2), 1, 1, -1, false );
-				_checkSpanProperties( Span.dec(9, 3), 9, 3, -1, false );
-				_checkSpanProperties( Span.dec(-4, -12), -4, -12, -1, false );
-				_checkSpanProperties( Span.dec(-3, -1), -3, -3, -1, false );					
-			};
-		};
-		
+		it('should answer undefined when the edge are in opposite directions', function () {
+			expect( Span.basic(8, -4).size() ).toBe( UND );
+			expect( Span.inc(7, -0).size() ).toBe( UND );
+			expect( Span.inc(0, -0).size() ).toBe( UND );
+			expect( Span.dec(5, -1).size() ).toBe( UND );
+		});
+
+		it('should answer undefined if it is wrapping', function () {
+			expect( Span.basic(4, true).size() ).toBe( UND );
+			expect( Span.inc(4, true).size() ).toBe( UND );
+			expect( Span.dec(4, true).size() ).toBe( UND );
+
+			expect( Span.inc(4, 8, true).size() ).toBe( UND );
+			expect( Span.dec(4, 8, true).size() ).toBe( UND );
+
+			expect( Span(10, 4, FWD, true).size() ).toBe( UND );
+
+			expect( Span.dec(5, -1).size() ).toBe( UND );
+		});
 	});
+	
+	describe('When checking to see if an object is a span', function () {
+		it('HotSausage.Collections.Span should be able to check if another object is a span', function () {
+			expect( Span.isSpan(Span.inc()) ).toBe( true );
+			expect( Span.isSpan({}) ).toBe( false );
+			expect( Span.isSpan("") ).toBe( false );
+			expect( Span.isSpan(34) ).toBe( false );
+		});
+
+		it('should be possible for a span to check to see if it is a span itself', function () {
+			expect( Span.inc().isSpan() ).toBe( true );
+		});
+	});
+
+	describe('When normalizing a span', function () {
+
+	});
+	
 });
-*/

@@ -247,6 +247,18 @@
 			});
 		};
 		
+		var _isPrivate = function (propertyName) {return propertyName.charAt(0) === "_";};
+		
+		var _isPublic = function (propertyName) {return propertyName.charAt(0) !== "_";};
+		
+		var _hasLocalProperty = function (target, propertyName) {
+			return HAS_OWN_PROPERTY.call(target, propertyName);
+		};
+		
+		var _hasLocalPublicProperty = function (target, propertyName) {
+			return _hasLocalProperty(target, propertyName) && _isPublic(propertyName);
+		};
+		
 		_HotSausage = _HS;
 		_HS.handlesErrorsQuietly = false;
 		_HS.coreMethodsEnabled = false;
@@ -279,9 +291,9 @@
 		
 		_HS.isDefined = _isDefined;
 		
-		_HS.isPrivate = function (propertyName) {return propertyName.charAt(0) === "_";};
+		_HS.isPrivate = _isPrivate;
 		
-		_HS.isPublic = function (propertyName) {return propertyName.charAt(0) !== "_";};
+		_HS.isPublic = _isPublic;
 		
 		/**
 		 * returns whether or not an object is undefined
@@ -333,13 +345,9 @@
 		 * @returns {Boolean} true if the object has a local copy of the property, false otherwise
 		 * @borrows Object#hasOwnProperty as this.isLocalProperty
 		 */
-		_HS.hasLocalProperty = function (target, propertyName) {
-			return HAS_OWN_PROPERTY.call(target, propertyName);
-		};
+		_HS.hasLocalProperty = _hasLocalProperty;
 		
-		_HS.hasLocalPublicProperty = function (target, propertyName) {
-			return _hasLocalProperty(target, propertyName) && _isPublic(propertyName);
-		};
+		_HS.hasLocalPublicProperty = _hasLocalPublicProperty;
 		
 		/**
 		 * adds a new method to an object if the implementation function is

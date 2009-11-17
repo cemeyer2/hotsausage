@@ -9,6 +9,7 @@
 
 HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	// var HS = Collections.module();
+	var undefined;
 	var _isNumber = _Collections_HS.isNumber;
 	var createConstantAccessor = _Collections_HS.createConstantAccessor;
 
@@ -21,8 +22,11 @@ HotSausage.Collections.extend(function (Collections, _Collections_HS) {
 	
 	
 	var _array_forEach = function (array, action) {
-		var limit = array.length, index;
-		for (index = 0; index < limit; index += 1) {action(array[index], index);}
+		var limit = array.length, index = 0;
+		while (index < limit) {
+			action(array[index], index);
+			index += 1;
+		}
 	};
 	
 	var _array_forEachWithin = function (array, action, normalizedSpan) {

@@ -20,7 +20,18 @@ osascript -e 'tell app "TextMate" to reload bundles'
 hg clone http://bitbucket.org/mazdak/textmate-mercurial-bundle/
 
 // isLocalProperty isInstanceProperty
-	
+
+
+
+Span
+	WrappingSpan
+		IncWrappingSpan
+		DecWrappingSpan
+	NonWrappingSpan
+		IncNonWrappingSpan
+		DecNonWrappingSpan
+
+move clamping and "unwrapping" to normalization
 	
 	
 
