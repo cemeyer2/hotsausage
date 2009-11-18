@@ -28,6 +28,7 @@ describe('Priviledged test suite', function () {
 				expect(purse.ssn).toBeDefined();
 				expect(purse.ssn).toEqual(ssn);
 			};
+			expect(Person.enablePrivacy).toBeDefined();
 			expect(Person.privilegedMethod).toBeDefined();
 			
 			var p = new Person("123-45-6789");
