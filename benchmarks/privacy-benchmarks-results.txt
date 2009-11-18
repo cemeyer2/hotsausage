@@ -2,6 +2,53 @@ privacy benchmarks results:
 
 run on 18 nov 2009 at rev 83:1412e85cfe79
 
+this time i closed all other possible processes on my machine and set cpu governor to full speed
+
+chuck@silverstone:~/workspaces/workspace_hotsausage/hotsausage/benchmarks$ ./run-benchmarks.sh src/PrivacyBenchmarks-rhino.js 
+opt disabled                                                                                                                  
+constructing:                                                                                                                 
+HS: avg:81.498 ms, stddev:17.7985391535373 ms, max:624 ms, min:79 ms                                                          
+Closure: 43.817 ms, stddev:5.252000666412747 ms, max:137 ms, min:42 ms                                                        
+Var: 22.653 ms, stddev:0.8675200285872453 ms, max:38 ms, min:22 ms                                                            
+
+
+accessing properties:
+HS: avg:144.607 ms, stddev:53.81940682504777 ms, max:1104 ms, min:134 ms
+Closure: 13.55 ms, stddev:1.1863810517704672 ms, max:37 ms, min:13 ms   
+Var: 14.61 ms, stddev:0.7495998932764026 ms, max:19 ms, min:14 ms       
+
+
+
+
+opt level 0
+constructing:
+HS: avg:32.452 ms, stddev:17.906638322141877 ms, max:458 ms, min:30 ms
+Closure: 23.689 ms, stddev:2.6781110880618786 ms, max:92 ms, min:23 ms
+Var: 8.163 ms, stddev:1.4705206560942954 ms, max:41 ms, min:7 ms      
+
+
+accessing properties:
+HS: avg:59.542 ms, stddev:51.9929633315894 ms, max:844 ms, min:50 ms
+Closure: 2.892 ms, stddev:1.7164894406899214 ms, max:52 ms, min:2 ms
+Var: 3.179 ms, stddev:0.7259194170154155 ms, max:16 ms, min:2 ms
+
+
+
+
+opt level 9
+constructing:
+HS: avg:33.603 ms, stddev:19.933524299531182 ms, max:504 ms, min:31 ms
+Closure: 22.907 ms, stddev:1.8084111811200527 ms, max:71 ms, min:22 ms
+Var: 7.954 ms, stddev:1.3870414557611457 ms, max:35 ms, min:7 ms
+
+
+accessing properties:
+HS: avg:61.49 ms, stddev:49.47342620033506 ms, max:813 ms, min:53 ms
+Closure: 3.587 ms, stddev:26.975515398227333 ms, max:856 ms, min:2 ms
+Var: 3.09 ms, stddev:0.8932524839036271 ms, max:27 ms, min:3 ms
+
+run on 18 nov 2009 at rev 83:1412e85cfe79
+
 chuck@silverstone:~/workspaces/workspace_hotsausage/hotsausage/benchmarks$ ./run-benchmarks.sh src/PrivacyBenchmarks-rhino.js 
 opt disabled                                                                                                                  
 constructing:                                                                                                                 
