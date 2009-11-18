@@ -1,0 +1,46 @@
+privacy benchmarks results:
+
+run on 18 nov 2009 at rev 83:1412e85cfe79
+
+chuck@silverstone:~/workspaces/workspace_hotsausage/hotsausage/benchmarks$ ./run-benchmarks.sh src/PrivacyBenchmarks-rhino.js 
+opt disabled                                                                                                                  
+constructing:                                                                                                                 
+HS: avg:83.001 ms, stddev:20.181303203708126 ms, max:666 ms, min:80 ms                                                        
+Closure: 43.171 ms, stddev:5.397569730906686 ms, max:136 ms, min:42 ms                                                        
+Var: 22.593 ms, stddev:1.2811522157807886 ms, max:47 ms, min:22 ms                                                            
+
+
+accessing properties:
+HS: avg:160.108 ms, stddev:129.25464144857622 ms, max:2564 ms, min:136 ms
+Closure: 15.936 ms, stddev:64.33159335816268 ms, max:2045 ms, min:13 ms  
+Var: 15.16 ms, stddev:0.7059745037889075 ms, max:21 ms, min:14 ms        
+
+
+
+
+opt level 0
+constructing:
+HS: avg:34.712 ms, stddev:20.15641476056692 ms, max:521 ms, min:32 ms
+Closure: 24.066 ms, stddev:1.7865172823121447 ms, max:68 ms, min:23 ms
+Var: 8.58 ms, stddev:1.4105318146004384 ms, max:36 ms, min:8 ms
+
+
+accessing properties:
+HS: avg:61.936 ms, stddev:53.24458567779451 ms, max:885 ms, min:52 ms
+Closure: 3.761 ms, stddev:26.06606757836709 ms, max:825 ms, min:2 ms
+Var: 3.143 ms, stddev:0.5201451720433435 ms, max:8 ms, min:3 ms
+
+
+
+
+opt level 9
+constructing:
+HS: avg:34.278 ms, stddev:22.408764267580665 ms, max:536 ms, min:31 ms
+Closure: 23.954 ms, stddev:3.7472501918073156 ms, max:98 ms, min:23 ms
+Var: 8.367 ms, stddev:1.3543673799970235 ms, max:35 ms, min:7 ms
+
+
+accessing properties:
+HS: avg:60.542 ms, stddev:59.3995137690537 ms, max:1019 ms, min:50 ms
+Closure: 2.893 ms, stddev:1.8819009006852618 ms, max:52 ms, min:2 ms
+Var: 3.166 ms, stddev:1.2018502402545832 ms, max:28 ms, min:3 ms
