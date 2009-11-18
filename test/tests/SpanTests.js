@@ -8,11 +8,11 @@ describe('Span test suite', function () {
 	
 	var _checkSpanProperties = function (span, wraps, start, end, direction, impliedDirection_) {
 		var impliedDirection = (arguments.length === 5) ? direction : impliedDirection_;
-		expect(span.wraps).toBe(wraps);
-		expect( equalValues(span.start, start) ).toBe(true);
-		expect( equalValues(span.end, end) ).toBe(true);
-		expect(span.direction).toBe(direction);
-		expect(span.impliedDirection).toBe(impliedDirection);
+		expect(span._wraps).toBe(wraps);
+		expect( equalValues(span._start, start) ).toBe(true);
+		expect( equalValues(span._end, end) ).toBe(true);
+		expect(span._direction).toBe(direction);
+		expect(span._impliedDirection).toBe(impliedDirection);
 	};
 	
 	describe('When creating a basic span', function () { 

@@ -251,12 +251,12 @@
 		
 		var _isPublic = function (propertyName) {return propertyName.charAt(0) !== "_";};
 		
-		var _hasLocalProperty = function (target, propertyName) {
+		var _hasOwnProperty = function (target, propertyName) {
 			return HAS_OWN_PROPERTY.call(target, propertyName);
 		};
 		
-		var _hasLocalPublicProperty = function (target, propertyName) {
-			return _hasLocalProperty(target, propertyName) && _isPublic(propertyName);
+		var _hasOwnPublicProperty = function (target, propertyName) {
+			return _hasOwnProperty(target, propertyName) && _isPublic(propertyName);
 		};
 		
 		_HotSausage = _HS;
@@ -338,16 +338,15 @@
 		/**
 		 * returns whether or not an an bobject has a local property
 		 * @function
-		 * @name hasLocalProperty
+		 * @name hasOwnProperty
 		 * @memberOf HotSausage
 		 * @param {Object} the target
 		 * @param {String} the name of the property to check
 		 * @returns {Boolean} true if the object has a local copy of the property, false otherwise
-		 * @borrows Object#hasOwnProperty as this.isLocalProperty
 		 */
-		_HS.hasLocalProperty = _hasLocalProperty;
+		_HS.hasOwnProperty = _hasOwnProperty;
 		
-		_HS.hasLocalPublicProperty = _hasLocalPublicProperty;
+		_HS.hasOwnPublicProperty = _hasOwnPublicProperty;
 		
 		/**
 		 * adds a new method to an object if the implementation function is

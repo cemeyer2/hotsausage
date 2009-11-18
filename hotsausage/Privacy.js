@@ -60,8 +60,8 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		if (purse === _CurrentSlot) {
 			return _SabotageHandlers.onCounterfeitPurse(purse, target);
 		}
-		if (target !== purse.owner) {
-			return _SabotageHandlers.onImproperPurse(purse, target, purse.owner);
+		if (target !== purse._owner) {
+			return _SabotageHandlers.onImproperPurse(purse, target, purse._owner);
 		}
 		return purse;
 		/// NOTE:   _ActiveTransporter is not threadsafe, but is 
@@ -146,7 +146,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		if (target._purse !== undefined) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
 		}
-		purse.owner = target;
+		purse._owner = target;
 		target._purse = _createProtectedAccessorFor(purse);
 		return purse;
 	};

@@ -31,22 +31,22 @@ describe('Templates test suite', function () {
 			purse = instance0._purse;
 			
 			expect( purse ).toBeDefined();
-			expect( ppurse.owner ).toBe( instance0 );
+			expect( purse._owner ).toBe( instance0 );
 		});
 		
 		it('should have behavior data', function () {
-			instanceBD = instance0._purse._hsbd;
+			instanceBD = instance0._purse.__hsbd;
 			
 			expect( instanceBD ).toBeDefined();
 			expect( instanceBD.name() ).toBe( "Clone_BD" );
 		});
 		
 		it('should have a bootstrap behavior data object', function () {
-			bootstrapBD = instance0._purse._hsbd.delegateBD;
+			bootstrapBD = instance0._purse.__hsbd._delegateBD;
 			
 			expect( bootstrapBD ).toBeDefined();
 			expect( bootstrapBD.name() ).toBe("_NULL__BD");
-			expect( bootstrapBD.templateBD ).toBe( bootstrapBD );
+			expect( bootstrapBD._templateBD ).toBe( bootstrapBD );
 		});
 		
 	});
