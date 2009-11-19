@@ -16,3 +16,15 @@ task :default do
   
   %x{java -jar yuicompressor-2.4.2.jar HotSausage_full.js -v -o HotSausage_full-min.js}
 end
+
+desc 'Builds a file containing all Jasmine tests for HotSausage'
+task :test do
+  sources  = ["../test/tests/HotSausageTests.js", "../test/tests/PrivacyTests.js", "../test/tests/CollectionsTests.js", "../test/tests/listTests.js", "../test/tests/SpanTests.js", "../test/tests/TemplatesTests.js"]
+  
+  hotsausage = File.new('HotSausage_tests-full.js', 'w')
+  sources.each do |source_filename|
+    puts "adding "+source_filename+" to dist file"
+    hotsausage.puts(File.read(source_filename))
+  end
+  hotsausage.close()
+end
