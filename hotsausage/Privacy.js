@@ -25,6 +25,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	var _ActiveTransporter = _newObject();
 	var _CurrentSlot = _newObject();
 	var _PurseValidation = _newObject();
+	var _ModuleKeys = _newObject();
 
 	var FLOOR = Math.floor;
 	var RANDOM = Math.random;
@@ -132,6 +133,18 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		};
 	};
 	
+	var _getModuleFromKey = function (moduleKey) {
+		for(module in _ModuleKeys) {
+			if (_ModuleKeys.hasOwnProperty(module)) {
+				continue;
+			}
+			if (_ModuleKeys[module] === moduleKey) {
+				return module;
+			}
+		}
+		return null;
+	};
+	
 	/**
 	 * attaches a purse to a target
 	 * @function
@@ -141,7 +154,16 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @param {Object} delegatePurse_ is purse of its delegate object
 	 * @return {Object} the purse for the target
 	 */
-	var _attachPurse = function (target, purse_) {
+	var _attachPurse = function (target, moduleKey, purse_) {
+		
+		var module = _getModuleFromKey(moduleKey);
+		if(module === null) {
+			return _SabotageHandlers.onImproperModuleKey(target, moduleKey);
+		}
+		if ( (!target.isPrototypeOf(module))) {
+			return _SabotageHandlers.onImproperModuleKey(target, moduleKey);
+		}
+		
 		var	purse = purse_ || _newObject(target);
 		if (target._purse !== undefined) {
 			return _SabotageHandlers.onPurseAlreadyPresent(target);
@@ -149,6 +171,26 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		purse._owner = target;
 		target._purse = _createProtectedAccessorFor(purse);
 		return purse;
+	};
+	
+	/**
+	 * requests and returns a key to enable privacy for the parameter module
+	 * @function
+	 * @inner
+	 * @name _requestModuleKey
+	 * @param {Object} module the module which is requesting a session key
+	 * @return {String} a key for that module which should be used when enabling privacy on that module and its children
+	 * @throws error if the module already has requested a key
+	 * 
+	 */
+	var _requestModuleKey = function (module) {
+		var key;
+		if (_ModuleKeys[module] !== undefined) {
+			return _SabotageHandlers.onExistingModuleKey(module);
+		}
+		key = _newSessionKey();
+		_ModuleKeys[module] = key;
+		return key;
 	};
 	
 	/**
@@ -171,6 +213,8 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 	 * @param {Function} func the implementation of the new privileged method
 	 */
 	Privacy.privilegedMethodOn = _setPrivilegedMethod;
+	
+	Privacy.requestModuleKey = _requestModuleKey;
 	
 	/**
 	 * causes an error to be thrown when a method is improperly moved if errors are not handled 
@@ -238,6 +282,16 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		return null;
 	};
 	
+	Privacy.onImproperModuleKey = function (module, invalidKey) {
+		_handleError("ImproperModuleKey", "Unauthorized attempt to enable privacy using the wrong module key!");
+		return null;
+	};
+	
+	Privacy.onExistingModuleKey = function (module) {
+		_handleError("ExistingModuleKey", "Target module already has existing key!");
+		return null;
+	};
+	
 	/**
 	 * causes an error to be thrown when a purse is attempted to be attached to an object that 
 	 * already has a purse if errors are not handled quietly. If errors are set to be handled 
@@ -267,7 +321,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		if (Object.prototype.enablePrivacy) {return false;}
 		if (Object.prototype.privilegedMethod) {return false;}
 		if (Function.prototype.privilegedMethod) {return false;}
-		Object.prototype.enablePrivacy = function () {return _attachPurse(this);};
+		Object.prototype.enablePrivacy = function (key) {return _attachPurse(this, key);};
 		Object.prototype.privilegedMethod = function (methodName, func) {
 			_setPrivilegedMethod(this, methodName, func);
 		};
@@ -344,7 +398,9 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 			onImproperPurse: Privacy.onImproperPurse,
 			onCounterfeitPurse: Privacy.onCounterfeitPurse,
 			onImproperPurseKey: Privacy.onImproperPurseKey,
-			onPurseAlreadyPresent: Privacy.onPurseAlreadyPresent
+			onPurseAlreadyPresent: Privacy.onPurseAlreadyPresent,
+			onImproperModuleKey: Privacy.onImproperModuleKey,
+			onExistingModuleKey: Privacy.onExistingModuleKey
 		};
 		// Privacy.enableOn remains!
 		delete Privacy.privilegedMethodOn;
@@ -353,6 +409,8 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		delete Privacy.onCounterfeitPurse;
 		delete Privacy.onImproperPurseKey;
 		delete Privacy.onPurseAlreadyPresent;
+		delete Privacy.onImproperModuleKey;
+		delete Privacy.onExistingModuleKey;
 		if (_Privacy_HS.coreMethodsEnabled) {
 			// Object.prototype.enablePrivacy remains!
 			delete Object.prototype.privilegedMethod;
