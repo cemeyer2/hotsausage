@@ -160,7 +160,7 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		if(module === null) {
 			return _SabotageHandlers.onImproperModuleKey(target, moduleKey);
 		}
-		if ( (!target.isPrototypeOf(module))) {
+		if ( !(module.prototype.isPrototypeOf(target) || module.prototype === target.__proto__) ) {
 			return _SabotageHandlers.onImproperModuleKey(target, moduleKey);
 		}
 		
@@ -192,6 +192,11 @@ HotSausage.newSubmodule("Privacy", function (Privacy, _Privacy_HS) {
 		_ModuleKeys[module] = key;
 		return key;
 	};
+	
+	_requestModuleKey(Object);
+	_requestModuleKey(Function);
+	_requestModuleKey(Number);
+	_requestModuleKey(Array);
 	
 	/**
 	 * attaches a purse to a target
